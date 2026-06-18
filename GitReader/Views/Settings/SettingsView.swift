@@ -4,6 +4,7 @@ import SwiftUI
 /// 显示仓库信息、同步触发、断开连接
 struct SettingsView: View {
     @Binding var hasConfiguredRepo: Bool
+    @StateObject private var localizationManager = LocalizationManager.shared
 
     @State private var showDisconnectAlert = false
     @State private var showToast = false
@@ -19,23 +20,23 @@ struct SettingsView: View {
             Section {
                 SettingsRow(
                     icon: "link",
-                    label: "仓库地址",
+                    label: "repo_address".localized,
                     value: repoURL
                 )
 
                 SettingsRow(
                     icon: "key.horizontal",
-                    label: "Access Token",
+                    label: "pat_token".localized,
                     value: maskToken(KeychainService.shared.readToken() ?? "")
                 )
 
                 SettingsRow(
                     icon: "leaf",
-                    label: "分支",
+                    label: "branch".localized,
                     value: branch
                 )
             } header: {
-                sectionHeader("仓库信息")
+                sectionHeader("repo_info".localized)
             }
 
             // 同步
@@ -51,13 +52,13 @@ struct SettingsView: View {
                                 .foregroundStyle(ClaudeColors.textSecondary)
                         }
 
-                        Text(isSyncing ? "正在同步..." : "立即同步")
+                        Text(isSyncing ? "syncing".localized : "sync_now".localized)
                             .font(ClaudeTypography.bodyFont)
                             .foregroundStyle(ClaudeColors.text)
 
                         Spacer()
 
-                        Text("刚刚更新")
+                        Text("just_updated".localized)
                             .font(ClaudeTypography.codeCaptionFont)
                             .foregroundStyle(ClaudeColors.textMuted)
                     }
@@ -73,7 +74,7 @@ struct SettingsView: View {
                         Image(systemName: "doc.text.magnifyingglass")
                             .font(.system(size: 16))
                             .foregroundStyle(ClaudeColors.textSecondary)
-                        Text("属性模板管理")
+                        Text("property_template_management".localized)
                             .font(ClaudeTypography.bodyFont)
                             .foregroundStyle(ClaudeColors.text)
                     }
@@ -81,11 +82,38 @@ struct SettingsView: View {
                 }
             }
 
+            // 语言设置
+            Section {
+                HStack(spacing: 12) {
+                    Image(systemName: "globe")
+                        .font(.system(size: 16))
+                        .foregroundStyle(ClaudeColors.textSecondary)
+                        .frame(width: 22)
+                    
+                    Text("language".localized)
+                        .font(ClaudeTypography.bodyFont)
+                        .foregroundStyle(ClaudeColors.text)
+                    
+                    Spacer()
+                    
+                    Picker("", selection: $localizationManager.currentLanguage) {
+                        ForEach(AppLanguage.allCases) { lang in
+                            Text(lang.displayName).tag(lang)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(ClaudeColors.textSecondary)
+                }
+                .padding(.vertical, 4)
+            } header: {
+                sectionHeader("language".localized)
+            }
+
             // 关于
             Section {
                 SettingsRow(
                     icon: "book.closed",
-                    label: "Git Reader",
+                    label: "git_reader".localized,
                     value: "v0.1.0 MVP"
                 )
 
@@ -93,26 +121,26 @@ struct SettingsView: View {
                     HStack(spacing: 12) {
                         Image(systemName: "trash")
                             .font(.system(size: 16))
-                        Text("断开仓库连接")
+                        Text("disconnect_repo".localized)
                             .font(ClaudeTypography.bodyFont)
                     }
                 }
             } header: {
-                sectionHeader("关于")
+                sectionHeader("about".localized)
             }
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(ClaudeColors.background)
-        .navigationTitle("设置")
+        .navigationTitle("settings".localized)
         .navigationBarTitleDisplayMode(.inline)
-        .alert("断开仓库连接", isPresented: $showDisconnectAlert) {
-            Button("取消", role: .cancel) {}
-            Button("断开", role: .destructive) {
+        .alert("disconnect_repo".localized, isPresented: $showDisconnectAlert) {
+            Button("cancel".localized, role: .cancel) {}
+            Button("disconnect".localized, role: .destructive) {
                 disconnectRepository()
             }
         } message: {
-            Text("这将清除本地缓存和保存的 Token。")
+            Text("disconnect_alert_message".localized)
         }
         .overlay(alignment: .bottom) {
             ToastView(message: toastMessage, isPresented: $showToast)
@@ -129,13 +157,13 @@ struct SettingsView: View {
                 try await GitSyncService.shared.sync()
                 await MainActor.run {
                     isSyncing = false
-                    toastMessage = "同步完成"
+                    toastMessage = "sync_completed".localized
                     showToast = true
                 }
             } catch {
                 await MainActor.run {
                     isSyncing = false
-                    toastMessage = "同步失败: \(error.localizedDescription)"
+                    toastMessage = "sync_failed".localized(arguments: error.localizedDescription)
                     showToast = true
                 }
             }
@@ -145,7 +173,7 @@ struct SettingsView: View {
     private func disconnectRepository() {
         GitSyncService.shared.reset()
 
-        toastMessage = "已断开仓库连接"
+        toastMessage = "disconnected_success".localized
         showToast = true
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

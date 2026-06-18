@@ -79,9 +79,9 @@ enum SyncError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .authFailed:
-            return "认证失败，请检查 Token 是否正确"
+            return "auth_failed_error".localized
         case .networkUnreachable:
-            return "网络不可达，已切换到离线模式"
+            return "network_unreachable_error".localized
         case .unknown(let message):
             return message
         }

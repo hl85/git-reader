@@ -53,13 +53,13 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
     /// 校验同步前置条件
     func validateForSync() throws {
         guard KeychainService.shared.readToken() != nil else {
-            throw SyncError.unknown("未找到 Access Token，请重新连接仓库")
+            throw SyncError.unknown("token_not_found_error".localized)
         }
         guard !repoURL.isEmpty else {
-            throw SyncError.unknown("未配置仓库地址")
+            throw SyncError.unknown("repo_not_configured_error".localized)
         }
         guard isLocalRepoExists else {
-            throw SyncError.unknown("本地仓库未完成初始化，请等待克隆完成")
+            throw SyncError.unknown("local_repo_not_initialized_error".localized)
         }
     }
 
@@ -124,6 +124,33 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         try await performGitOperation {
             try self.fetchLatest()
             try self.hardReset()
+        }
+
+        await updateState(.success)
+    }
+
+    /// 提交本地修改并与云端同步（commit -> fetch -> merge -> push）
+    func commitAndSync(fileURL: URL, progressHandler: @escaping @Sendable (String) -> Void) async throws {
+        await updateState(.syncing)
+
+        let relativePath = fileURL.path.replacingOccurrences(of: repoRootURL.path + "/", with: "")
+
+        try await performGitOperation {
+            // 1. Commit local changes
+            progressHandler("sync_committing".localized)
+            try self.commitLocalChanges(relativePath: relativePath)
+
+            // 2. Fetch remote updates
+            progressHandler("sync_pulling".localized)
+            try self.fetchLatest()
+
+            // 3. Merge and resolve conflicts
+            progressHandler("sync_resolving_conflicts".localized)
+            try self.mergeRemoteChanges()
+
+            // 4. Push to remote
+            progressHandler("sync_pushing".localized)
+            try self.pushLatest()
         }
 
         await updateState(.success)
@@ -194,7 +221,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         guard result == .gitOK, let repo = repoPtr else {
             let gitErr = gitErrorLast()
             let detail = gitErr?.message ?? "未知错误"
-            throw SyncError.unknown("克隆失败: \(detail) (code: \(result.rawValue))")
+            throw SyncError.unknown("clone_failed_with_detail".localized(arguments: detail, result.rawValue))
         }
 
         gitRepositoryFree(repo: repo)
@@ -205,7 +232,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         let openResult = gitRepositoryOpen(out: &repoPtr, path: repoRootURL.path)
         guard openResult == .gitOK, let repo = repoPtr else {
             let detail = gitErrorLast()?.message ?? "未知"
-            throw SyncError.unknown("打开仓库失败: \(detail)")
+            throw SyncError.unknown("open_repo_failed".localized(arguments: detail))
         }
         defer { gitRepositoryFree(repo: repo) }
 
@@ -213,7 +240,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         let remoteResult = gitRemoteLookup(out: &remotePtr, repo: repo, name: "origin")
         guard remoteResult == .gitOK, let remote = remotePtr else {
             let detail = gitErrorLast()?.message ?? "未知"
-            throw SyncError.unknown("查找 origin 失败: \(detail)")
+            throw SyncError.unknown("find_origin_failed".localized(arguments: detail))
         }
         defer { gitRemoteFree(remote: remote) }
 
@@ -231,7 +258,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
 
         guard fetchResult == .gitOK else {
             let detail = gitErrorLast()?.message ?? "未知"
-            throw SyncError.unknown("Fetch 失败: \(detail)")
+            throw SyncError.unknown("fetch_failed".localized(arguments: detail))
         }
     }
 
@@ -239,7 +266,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         var repoPtr: OpaquePointer?
         let openResult = gitRepositoryOpen(out: &repoPtr, path: repoRootURL.path)
         guard openResult == .gitOK, let repo = repoPtr else {
-            throw SyncError.unknown("打开仓库失败: \(openResult)")
+            throw SyncError.unknown("open_repo_failed".localized(arguments: "\(openResult)"))
         }
         defer { gitRepositoryFree(repo: repo) }
 
@@ -250,13 +277,13 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
             name: "refs/remotes/origin/\(branch)"
         )
         guard refResult == .gitOK else {
-            throw SyncError.unknown("无法找到 origin/\(branch) 引用: \(refResult)")
+            throw SyncError.unknown("find_origin_branch_ref_failed".localized(arguments: branch, refResult.rawValue))
         }
 
         var commitPtr: OpaquePointer?
         let commitResult = gitCommitLookup(commit: &commitPtr, repo: repo, id: oid)
         guard commitResult == .gitOK, let commit = commitPtr else {
-            throw SyncError.unknown("查找 commit 失败: \(commitResult)")
+            throw SyncError.unknown("find_commit_failed".localized(arguments: commitResult.rawValue))
         }
         defer { gitCommitFree(commit: commit) }
 
@@ -271,7 +298,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         )
 
         guard resetResult == .gitOK else {
-            throw SyncError.unknown("Reset 失败: \(resetResult)")
+            throw SyncError.unknown("reset_failed".localized(arguments: resetResult.rawValue))
         }
     }
 
@@ -345,6 +372,242 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         _ = gitLibgit2OptSetSSLCertLocations(file: tempCerts.path, path: nil)
     }
 
+    private func makePushOptions(token: String) -> GitPushOptions {
+        var pushOpts = GitPushOptions()
+        
+        // 设置认证回调
+        if !token.isEmpty {
+            let tokenBox = token as NSString
+            pushOpts.callbacks.credentials = Self.credentialCallback
+            pushOpts.callbacks.payload = Unmanaged.passUnretained(tokenBox).toOpaque()
+        }
+        
+        // 设置证书校验回调，绕过 SSL 验证
+        pushOpts.callbacks.certificateCheck = Self.certificateCheckCallback
+        
+        return pushOpts
+    }
+
+    private func commitLocalChanges(relativePath: String) throws {
+        var repoPtr: OpaquePointer?
+        let openResult = gitRepositoryOpen(out: &repoPtr, path: repoRootURL.path)
+        guard openResult == .gitOK, let repo = repoPtr else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("open_repo_failed".localized(arguments: detail))
+        }
+        defer { gitRepositoryFree(repo: repo) }
+
+        var indexPtr: OpaquePointer?
+        let indexResult = gitRepositoryIndex(out: &indexPtr, repo: repo)
+        guard indexResult == .gitOK, let index = indexPtr else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("open_index_failed".localized(arguments: detail))
+        }
+        defer { gitIndexFree(index: index) }
+
+        let addResult = gitIndexAddByPath(index: index, path: relativePath)
+        guard addResult == .gitOK else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("add_file_failed".localized(arguments: detail))
+        }
+
+        let writeResult = gitIndexWrite(index: index)
+        guard writeResult == .gitOK else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("write_index_failed".localized(arguments: detail))
+        }
+
+        var signature = GitSignature()
+        let sigResult = gitSignatureNow(out: &signature, name: "Git Reader", email: "gitreader@example.com")
+        guard sigResult == .gitOK else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("create_signature_failed".localized(arguments: detail))
+        }
+
+        let commitOpts = GitCommitCreateOptions(author: signature, committer: signature)
+        var commitOid = GitOID()
+        let commitResult = gitCommitCreateFromStage(
+            id: &commitOid,
+            repo: repo,
+            message: "Update properties for \(relativePath)",
+            opts: commitOpts
+        )
+
+        // .gitEUnchanged means no changes, which is fine
+        guard commitResult == .gitOK || commitResult == .gitEUnchanged else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("commit_failed".localized(arguments: detail))
+        }
+    }
+
+    private func mergeRemoteChanges() throws {
+        var repoPtr: OpaquePointer?
+        let openResult = gitRepositoryOpen(out: &repoPtr, path: repoRootURL.path)
+        guard openResult == .gitOK, let repo = repoPtr else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("open_repo_failed".localized(arguments: detail))
+        }
+        defer { gitRepositoryFree(repo: repo) }
+
+        var remoteOid = GitOID()
+        let refResult = gitReferenceNameToID(
+            out: &remoteOid,
+            repo: repo,
+            name: "refs/remotes/origin/\(branch)"
+        )
+        guard refResult == .gitOK else {
+            // If remote branch ref doesn't exist, nothing to merge
+            return
+        }
+
+        var annotatedCommitPtr: OpaquePointer? = nil
+        let annotatedResult = gitAnnotatedCommitLookup(out: &annotatedCommitPtr, repo: repo, id: remoteOid)
+        guard annotatedResult == .gitOK, let annotatedCommit = annotatedCommitPtr else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("lookup_annotated_commit_failed".localized(arguments: detail))
+        }
+        defer { gitAnnotatedCommitFree(commit: annotatedCommit) }
+
+        var mergeAnalysis: GitMergeAnalysisT = .gitMergeAnalysisNone
+        var mergePreference: GitMergePreferenceT = .gitMergePreferenceNone
+        var theirHeads: [OpaquePointer?] = [annotatedCommit]
+        let analysisResult = gitMergeAnalysis(
+            analysisOut: &mergeAnalysis,
+            preferenceOut: &mergePreference,
+            repo: repo,
+            theirHeads: &theirHeads,
+            theirHeadsLen: 1
+        )
+        guard analysisResult == .gitOK else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("merge_analysis_failed".localized(arguments: detail))
+        }
+
+        if mergeAnalysis.contains(.gitMergeAnalysisUpToDate) {
+            // Already up to date, nothing to merge
+            return
+        }
+
+        // Perform merge favoring ours (local)
+        var mergeOpts = GitMergeOptions()
+        mergeOpts.fileFavor = .gitMergeFileFavorOurs
+
+        var checkoutOpts = GitCheckoutOptions()
+        checkoutOpts.checkoutStrategy = .gitCheckoutForce
+
+        let mergeResult = gitMerge(
+            repo: repo,
+            theirHeads: &theirHeads,
+            theirHeadsLen: 1,
+            mergeOpts: mergeOpts,
+            checkoutOpts: checkoutOpts
+        )
+        guard mergeResult == .gitOK else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("merge_failed".localized(arguments: detail))
+        }
+
+        // Check and resolve conflicts in index
+        var indexPtr: OpaquePointer?
+        let indexResult = gitRepositoryIndex(out: &indexPtr, repo: repo)
+        guard indexResult == .gitOK, let index = indexPtr else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("open_index_failed".localized(arguments: detail))
+        }
+        defer { gitIndexFree(index: index) }
+
+        if gitIndexHasConflicts(index: index) {
+            var iteratorPointer: OpaquePointer? = nil
+            let iterResult = gitIndexConflictIteratorNew(iteratorOut: &iteratorPointer, index: index)
+            if iterResult == .gitOK, let iterator = iteratorPointer {
+                defer { gitIndexConflictIteratorFree(iterator: iterator) }
+                
+                var ancestorIndexEntry = GitIndexEntry()
+                var ourIndexEntry = GitIndexEntry()
+                var theirIndexEntry = GitIndexEntry()
+                
+                while true {
+                    let nextResult = gitIndexConflictNext(
+                        ancestorOut: &ancestorIndexEntry,
+                        ourOut: &ourIndexEntry,
+                        theirOut: &theirIndexEntry,
+                        iterator: iterator
+                    )
+                    if nextResult == .gitIterOver {
+                        break
+                    }
+                    guard nextResult == .gitOK else { break }
+                    
+                    if !ourIndexEntry.path.isEmpty {
+                        _ = gitIndexAddByPath(index: index, path: ourIndexEntry.path)
+                    } else if !theirIndexEntry.path.isEmpty {
+                        _ = gitIndexRemoveByPath(index: index, path: theirIndexEntry.path)
+                    } else if !ancestorIndexEntry.path.isEmpty {
+                        _ = gitIndexRemoveByPath(index: index, path: ancestorIndexEntry.path)
+                    }
+                }
+                _ = gitIndexWrite(index: index)
+            }
+        }
+
+        // Commit the merge
+        var signature = GitSignature()
+        let sigResult = gitSignatureNow(out: &signature, name: "Git Reader", email: "gitreader@example.com")
+        guard sigResult == .gitOK else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("create_signature_failed".localized(arguments: detail))
+        }
+
+        let commitOpts = GitCommitCreateOptions(author: signature, committer: signature)
+        var mergeCommitOid = GitOID()
+        let commitResult = gitCommitCreateFromStage(
+            id: &mergeCommitOid,
+            repo: repo,
+            message: "Merge remote-tracking branch 'origin/\(branch)' (resolved conflicts favoring local)",
+            opts: commitOpts
+        )
+        guard commitResult == .gitOK || commitResult == .gitEUnchanged else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("merge_commit_failed".localized(arguments: detail))
+        }
+
+        // Clean up repository state
+        _ = gitRepositoryStateCleanup(repo: repo)
+    }
+
+    private func pushLatest() throws {
+        var repoPtr: OpaquePointer?
+        let openResult = gitRepositoryOpen(out: &repoPtr, path: repoRootURL.path)
+        guard openResult == .gitOK, let repo = repoPtr else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("open_repo_failed".localized(arguments: detail))
+        }
+        defer { gitRepositoryFree(repo: repo) }
+
+        var remotePtr: OpaquePointer?
+        let remoteResult = gitRemoteLookup(out: &remotePtr, repo: repo, name: "origin")
+        guard remoteResult == .gitOK, let remote = remotePtr else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("find_origin_failed".localized(arguments: detail))
+        }
+        defer { gitRemoteFree(remote: remote) }
+
+        let token = KeychainService.shared.readToken() ?? ""
+        let pushOpts = makePushOptions(token: token)
+
+        let refspec = "refs/heads/\(branch):refs/heads/\(branch)"
+        let pushResult = gitRemotePush(
+            remote: remote,
+            refspecs: [refspec],
+            opts: pushOpts
+        )
+
+        guard pushResult == .gitOK else {
+            let detail = gitErrorLast()?.message ?? "未知"
+            throw SyncError.unknown("push_failed".localized(arguments: detail))
+        }
+    }
+
     private func embedToken(in urlString: String, token: String) -> String {
         guard !token.isEmpty,
               var components = URLComponents(string: urlString),
@@ -359,7 +622,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
     /// 测试连接（使用 HTTP Session 级别的连接测试）
     func testConnection(repoURL: String, token: String, session: URLSession = .shared) async throws {
         guard var components = URLComponents(string: repoURL) else {
-            throw SyncError.unknown("无效的仓库地址")
+            throw SyncError.unknown("invalid_repo_url".localized)
         }
         
         // 规范化路径，确保以 /info/refs 结尾
@@ -375,7 +638,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         components.queryItems = [URLQueryItem(name: "service", value: "git-upload-pack")]
         
         guard let url = components.url else {
-            throw SyncError.unknown("无法构建测试连接 URL")
+            throw SyncError.unknown("cannot_build_test_url".localized)
         }
         
         var request = URLRequest(url: url)
@@ -393,7 +656,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         do {
             let (_, response) = try await session.data(for: request)
             guard let httpResponse = response as? HTTPURLResponse else {
-                throw SyncError.unknown("无效的服务器响应")
+                throw SyncError.unknown("invalid_server_response".localized)
             }
             
             switch httpResponse.statusCode {
@@ -402,14 +665,14 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
             case 401, 403:
                 throw SyncError.authFailed
             case 404:
-                throw SyncError.unknown("仓库不存在，请检查地址是否正确")
+                throw SyncError.unknown("repo_does_not_exist".localized)
             default:
-                throw SyncError.unknown("连接失败，HTTP 状态码: \(httpResponse.statusCode)")
+                throw SyncError.unknown("connection_failed_with_status".localized(arguments: httpResponse.statusCode))
             }
         } catch let error as SyncError {
             throw error
         } catch {
-            throw SyncError.unknown("连接测试失败: \(error.localizedDescription)")
+            throw SyncError.unknown("connection_test_failed_with_error".localized(arguments: error.localizedDescription))
         }
     }
 

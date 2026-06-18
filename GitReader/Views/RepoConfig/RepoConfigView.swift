@@ -3,6 +3,7 @@ import SwiftUI
 /// 仓库配置页：首次使用时输入 Git URL + PAT
 struct RepoConfigView: View {
     @Binding var hasConfiguredRepo: Bool
+    @StateObject private var localizationManager = LocalizationManager.shared
 
     @State private var repoURL = ""
     @State private var patToken = ""
@@ -43,28 +44,50 @@ struct RepoConfigView: View {
     // MARK: - Header
 
     private var headerSection: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 24) {
+            // Vector Logo (Static version of Splash Logo)
             ZStack {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(ClaudeColors.cardBackground)
-                    .stroke(ClaudeColors.borderStrong, lineWidth: 1)
-                    .frame(width: 56, height: 56)
-
-                Image(systemName: "book.closed")
-                    .font(.title2)
-                    .foregroundStyle(ClaudeColors.textSecondary)
+                // Left Page
+                LeftPageShape()
+                    .stroke(ClaudeColors.text, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                
+                // Right Page
+                RightPageShape()
+                    .stroke(ClaudeColors.text, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                
+                // Spine (Git Branch Line)
+                GeometryReader { geo in
+                    Path { path in
+                        path.move(to: CGPoint(x: geo.size.width / 2, y: 10 * (geo.size.height / 100)))
+                        path.addLine(to: CGPoint(x: geo.size.width / 2, y: 90 * (geo.size.height / 100)))
+                    }
+                    .stroke(ClaudeColors.accent, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                }
+                
+                // Top Node
+                Circle()
+                    .fill(ClaudeColors.accent)
+                    .frame(width: 8, height: 8)
+                    .position(x: 60, y: 30)
+                
+                // Bottom Node
+                Circle()
+                    .fill(ClaudeColors.accent)
+                    .frame(width: 8, height: 8)
+                    .position(x: 60, y: 90)
             }
+            .frame(width: 120, height: 120)
 
-            VStack(spacing: 6) {
-                Text("Git Reader")
-                    .font(.system(.largeTitle, design: .serif).bold())
-                    .foregroundStyle(ClaudeColors.text)
+            VStack(spacing: 8) {
+                Text("GitReader")
+                    .font(.custom("Georgia", size: 30))
+                    .fontWeight(.medium)
+                    .foregroundColor(ClaudeColors.text)
 
-                Text("连接 Git 仓库\n在手机上阅读 Obsidian 笔记")
-                    .font(ClaudeTypography.bodyFont)
-                    .foregroundStyle(ClaudeColors.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(6)
+                Text("YOUR OBSIDIAN VAULT")
+                    .font(.system(size: 11, weight: .regular, design: .default))
+                    .tracking(1.5)
+                    .foregroundColor(ClaudeColors.textSecondary)
             }
         }
     }
@@ -75,7 +98,7 @@ struct RepoConfigView: View {
         VStack(spacing: 20) {
             // 仓库地址
             VStack(alignment: .leading, spacing: 8) {
-                label("仓库地址")
+                label("repo_address".localized)
                 TextField(
                     "https://github.com/user/notes.git",
                     text: $repoURL
@@ -97,7 +120,7 @@ struct RepoConfigView: View {
 
             // PAT Token
             VStack(alignment: .leading, spacing: 8) {
-                label("Personal Access Token")
+                label("pat_token".localized)
                 SecureField(
                     "ghp_xxxxxxxxxxxxxxxxxxxx",
                     text: $patToken
@@ -131,10 +154,10 @@ struct RepoConfigView: View {
                         HStack(spacing: 8) {
                             ProgressView()
                                 .scaleEffect(0.8)
-                            Text("正在连接...")
+                            Text("connecting".localized)
                         }
                     } else {
-                        Text("连接仓库")
+                        Text("connect_repo".localized)
                     }
                 }
                 .font(ClaudeTypography.bodyFont.weight(.semibold))
@@ -153,7 +176,7 @@ struct RepoConfigView: View {
     // MARK: - Footer
 
     private var footerSection: some View {
-        Text("Token 仅存储在设备 Keychain 中\n仅用于只读访问，不会推送任何内容")
+        Text("security_notice".localized)
             .font(.system(.footnote, design: .serif))
             .foregroundStyle(ClaudeColors.textMuted)
             .multilineTextAlignment(.center)
@@ -191,7 +214,7 @@ struct RepoConfigView: View {
                 
                 await MainActor.run {
                     isConnecting = false
-                    toastMessage = "仓库连接成功"
+                    toastMessage = "repo_connected_success".localized
                     showToast = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         withAnimation(.easeInOut(duration: 0.4)) {
@@ -201,7 +224,7 @@ struct RepoConfigView: View {
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "连接测试失败: \(error.localizedDescription)"
+                    errorMessage = "connection_failed_with_error".localized(arguments: error.localizedDescription)
                     isConnecting = false
                 }
             }

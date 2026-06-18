@@ -58,12 +58,13 @@ struct ToastView: View {
 
 struct OfflineBanner: View {
     let lastSyncTime: String?
+    @StateObject private var localizationManager = LocalizationManager.shared
 
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: "wifi.slash")
                 .font(.caption2)
-            Text(lastSyncTime.map { "离线模式 · 数据截至 \($0)" } ?? "离线模式")
+            Text(lastSyncTime.map { "offline_mode_with_time".localized(arguments: $0) } ?? "offline_mode".localized)
                 .font(.system(.caption2, design: .monospaced))
         }
         .foregroundStyle(ClaudeColors.lightAccent)
@@ -106,11 +107,13 @@ struct EmptyStateView: View {
 // MARK: - Sync Loader
 
 struct SyncLoader: View {
+    @StateObject private var localizationManager = LocalizationManager.shared
+
     var body: some View {
         HStack(spacing: 8) {
             ProgressView()
                 .scaleEffect(0.8)
-            Text("正在同步...")
+            Text("syncing".localized)
                 .font(.system(.caption, design: .serif))
                 .foregroundStyle(ClaudeColors.textSecondary)
         }

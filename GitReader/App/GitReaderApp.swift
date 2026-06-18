@@ -6,7 +6,9 @@ struct GitReaderApp: App {
 
     var body: some Scene {
         WindowGroup {
-            AppRootView(hasConfiguredRepo: $hasConfiguredRepo)
+            SplashWrapperView {
+                AppRootView(hasConfiguredRepo: $hasConfiguredRepo)
+            }
         }
     }
 }

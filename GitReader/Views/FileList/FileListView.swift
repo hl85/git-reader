@@ -8,6 +8,7 @@ import SwiftUI
 /// - 设置入口
 struct FileListView: View {
     @Binding var hasConfiguredRepo: Bool
+    @StateObject private var localizationManager = LocalizationManager.shared
 
     @State private var folders: [FolderNode] = []
     @State private var searchQuery = ""
@@ -52,11 +53,11 @@ struct FileListView: View {
                         Spacer()
                         EmptyStateView(
                             icon: "⚠️",
-                            title: "克隆仓库失败",
-                            description: "\(error)\n\n请检查网络或在设置中修改配置"
+                            title: "clone_failed".localized,
+                            description: "clone_failed_desc".localized(arguments: error)
                         )
                         Button(action: triggerInitialClone) {
-                            Text("重试克隆")
+                            Text("retry_clone".localized)
                                 .font(ClaudeTypography.bodyFont.weight(.semibold))
                                 .foregroundStyle(ClaudeColors.background)
                                 .padding(.horizontal, 20)
@@ -69,16 +70,16 @@ struct FileListView: View {
                         Spacer()
                         EmptyStateView(
                             icon: "📭",
-                            title: "没有找到匹配的笔记",
-                            description: "试试其他关键词\n或点击同步获取最新内容"
+                            title: "no_matching_notes".localized,
+                            description: "no_matching_notes_desc".localized
                         )
                         Spacer()
                     } else if folders.isEmpty {
                         Spacer()
                         EmptyStateView(
                             icon: "📂",
-                            title: "仓库为空",
-                            description: "点击右上角同步按钮\n拉取最新内容"
+                            title: "repo_empty".localized,
+                            description: "repo_empty_desc".localized
                         )
                         Spacer()
                     } else {
@@ -214,7 +215,7 @@ struct FileListView: View {
                 .font(.caption)
                 .foregroundStyle(ClaudeColors.textMuted)
 
-            TextField("搜索笔记名...", text: $searchQuery)
+            TextField("search_notes_placeholder".localized, text: $searchQuery)
                 .font(ClaudeTypography.bodyFont)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
@@ -251,7 +252,7 @@ struct FileListView: View {
                 }
             }) {
                 HStack(spacing: 4) {
-                    Text(selectedStatus != nil ? "\(selectedStatus!) (\(statusCounts[selectedStatus!] ?? 0))" : "状态")
+                    Text(selectedStatus != nil ? "\(selectedStatus!) (\(statusCounts[selectedStatus!] ?? 0))" : "status".localized)
                         .font(ClaudeTypography.monoCaptionFont)
                         .lineLimit(1)
                         .fixedSize(horizontal: true, vertical: false)
@@ -274,7 +275,7 @@ struct FileListView: View {
                 }
             }) {
                 HStack(spacing: 4) {
-                    Text(selectedTag != nil ? "#\(selectedTag!) (\(tagCounts[selectedTag!] ?? 0))" : "标签")
+                    Text(selectedTag != nil ? "#\(selectedTag!) (\(tagCounts[selectedTag!] ?? 0))" : "tag".localized)
                         .font(ClaudeTypography.monoCaptionFont)
                         .lineLimit(1)
                         .fixedSize(horizontal: true, vertical: false)
@@ -299,7 +300,7 @@ struct FileListView: View {
                         selectedStatus = nil
                     }
                 }) {
-                    Text("清除筛选")
+                    Text("clear_filter".localized)
                         .font(ClaudeTypography.monoCaptionFont)
                         .foregroundStyle(ClaudeColors.textMuted)
                 }
@@ -577,7 +578,7 @@ struct FileListView: View {
                 try await GitSyncService.shared.sync()
                 await MainActor.run {
                     syncState = .success
-                    toastMessage = "同步完成"
+                    toastMessage = "sync_completed".localized
                     showToast = true
                     loadFiles()
 
@@ -590,7 +591,7 @@ struct FileListView: View {
             } catch {
                 await MainActor.run {
                     syncState = .error(.unknown(error.localizedDescription))
-                    toastMessage = "同步失败: \(error.localizedDescription)"
+                    toastMessage = "sync_failed".localized(arguments: error.localizedDescription)
                     showToast = true
 
                     DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
@@ -618,14 +619,14 @@ struct FileListView: View {
             try await GitSyncService.shared.sync()
             await MainActor.run {
                 syncState = .success
-                toastMessage = "同步完成"
+                toastMessage = "sync_completed".localized
                 showToast = true
                 loadFiles()
             }
         } catch {
             await MainActor.run {
                 syncState = .error(.unknown(error.localizedDescription))
-                toastMessage = "同步失败: \(error.localizedDescription)"
+                toastMessage = "sync_failed".localized(arguments: error.localizedDescription)
                 showToast = true
             }
         }
@@ -728,14 +729,14 @@ struct TagSelectPopoverView: View {
         VStack(spacing: 0) {
             // 头部标题栏
             HStack {
-                Text("选择标签")
+                Text("select_tag".localized)
                     .font(ClaudeTypography.navTitleFont)
                     .foregroundStyle(ClaudeColors.text)
                 
                 Spacer()
                 
                 if selectedTag != nil {
-                    Button("清除") {
+                    Button("clear".localized) {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             selectedTag = nil
                         }
@@ -763,7 +764,7 @@ struct TagSelectPopoverView: View {
                     .font(.caption)
                     .foregroundStyle(ClaudeColors.textMuted)
                 
-                TextField("搜索标签...", text: $searchText)
+                TextField("search_tags_placeholder".localized, text: $searchText)
                     .font(ClaudeTypography.monoCaptionFont)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
@@ -792,7 +793,7 @@ struct TagSelectPopoverView: View {
                     if filteredTags.isEmpty {
                         HStack {
                             Spacer()
-                            Text("无匹配标签")
+                            Text("no_matching_tags".localized)
                                 .font(ClaudeTypography.captionFont)
                                 .foregroundStyle(ClaudeColors.textMuted)
                                 .padding(.vertical, 32)
@@ -850,14 +851,14 @@ struct StatusSelectPopoverView: View {
         VStack(spacing: 0) {
             // 头部标题栏
             HStack {
-                Text("选择状态")
+                Text("select_status".localized)
                     .font(ClaudeTypography.navTitleFont)
                     .foregroundStyle(ClaudeColors.text)
                 
                 Spacer()
                 
                 if selectedStatus != nil {
-                    Button("清除") {
+                    Button("clear".localized) {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             selectedStatus = nil
                         }

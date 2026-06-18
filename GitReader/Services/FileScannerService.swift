@@ -114,7 +114,7 @@ final class FileScannerService: @unchecked Sendable {
 
         // 根目录下的 .md 文件不打入文件夹
         if !rootFiles.isEmpty {
-            let rootFolder = FolderNode(name: "📄 根目录", children: rootFiles)
+            let rootFolder = FolderNode(name: "root_directory".localized, children: rootFiles)
             folders.insert(rootFolder, at: 0)
         }
 

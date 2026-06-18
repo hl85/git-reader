@@ -3,6 +3,7 @@ import Yams
 
 struct PropertyTemplateSettingsView: View {
     @StateObject private var manager = PropertyTemplateManager.shared
+    @StateObject private var localizationManager = LocalizationManager.shared
     @State private var yamlText: String = ""
     @State private var errorMessage: String?
     
@@ -12,7 +13,7 @@ struct PropertyTemplateSettingsView: View {
                 // YAML 模板编辑卡片
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("YAML 模板")
+                        Text("yaml_template".localized)
                             .font(ClaudeTypography.navTitleFont)
                             .foregroundStyle(ClaudeColors.textSecondary)
                         Spacer()
@@ -32,7 +33,7 @@ struct PropertyTemplateSettingsView: View {
                             validateAndSave(newValue)
                         }
                     
-                    Text("提示：支持的类型 (type) 包括：date (日期), enum (单选), tags (标签), text (单行文本)")
+                    Text("yaml_template_tip".localized)
                         .font(ClaudeTypography.captionFont)
                         .foregroundStyle(ClaudeColors.textSecondary)
                         .padding(.top, 2)
@@ -45,7 +46,7 @@ struct PropertyTemplateSettingsView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundStyle(ClaudeColors.accent)
-                            Text("格式错误")
+                            Text("format_error".localized)
                                 .font(ClaudeTypography.navTitleFont)
                                 .foregroundStyle(ClaudeColors.accent)
                         }
@@ -66,7 +67,7 @@ struct PropertyTemplateSettingsView: View {
                 
                 // 预览卡片
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("预览")
+                    Text("preview".localized)
                         .font(ClaudeTypography.navTitleFont)
                         .foregroundStyle(ClaudeColors.textSecondary)
                         .padding(.bottom, 4)
@@ -88,7 +89,7 @@ struct PropertyTemplateSettingsView: View {
                             }
                             
                             if let options = field.options {
-                                Text("选项: \(options.joined(separator: ", "))")
+                                Text("\("options".localized): \(options.joined(separator: ", "))")
                                     .font(ClaudeTypography.captionFont)
                                     .foregroundStyle(ClaudeColors.textSecondary)
                             }
@@ -108,7 +109,7 @@ struct PropertyTemplateSettingsView: View {
             .padding(.vertical, 16)
         }
         .background(ClaudeColors.background)
-        .navigationTitle("属性模板管理")
+        .navigationTitle("property_template_management".localized)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             yamlText = manager.templateYAML

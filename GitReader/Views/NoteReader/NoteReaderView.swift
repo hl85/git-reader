@@ -15,9 +15,9 @@ enum ReaderFontSize: String, CaseIterable, Identifiable {
     
     var displayName: String {
         switch self {
-        case .small: return "小"
-        case .medium: return "中"
-        case .large: return "大"
+        case .small: return "font_size_small".localized
+        case .medium: return "font_size_medium".localized
+        case .large: return "font_size_large".localized
         }
     }
     
@@ -81,6 +81,7 @@ struct NoteReaderView: View {
 
     @Environment(\.dismiss) private var dismiss
     @AppStorage("readerFontSize") private var fontSizeRaw: String = ReaderFontSize.medium.rawValue
+    @StateObject private var localizationManager = LocalizationManager.shared
     
     var fontSize: ReaderFontSize {
         ReaderFontSize(rawValue: fontSizeRaw) ?? .medium
@@ -100,6 +101,8 @@ struct NoteReaderView: View {
     @State private var showSetPropertiesSheet = false
     @State private var shareItems: IdentifiableShareItems? = nil
     @State private var isExporting = false
+    @State private var isSyncing = false
+    @State private var syncProgressMessage = ""
 
     private func readerContentForExport(isLazy: Bool) -> some View {
         VStack(alignment: .leading, spacing: ClaudeTypography.readerContentSpacing) {
@@ -162,7 +165,7 @@ struct NoteReaderView: View {
                 HStack(spacing: 12) {
                     // 字体大小
                     Menu {
-                        Picker("字体大小", selection: $fontSizeRaw) {
+                        Picker("font_size".localized, selection: $fontSizeRaw) {
                             ForEach(ReaderFontSize.allCases) { size in
                                 Text(size.displayName).tag(size.rawValue)
                             }
@@ -176,10 +179,10 @@ struct NoteReaderView: View {
                     // 更多操作
                     Menu {
                         Button(action: { showSetPropertiesSheet = true }) {
-                            Label("设置属性", systemImage: "tag")
+                            Label("set_properties".localized, systemImage: "tag")
                         }
                         Button(action: copyFullText) {
-                            Label("拷贝原文", systemImage: "doc.on.doc")
+                            Label("copy_source".localized, systemImage: "doc.on.doc")
                         }
                         /*
                         // 暂时隐藏：由于 SwiftUI 离屏渲染及 LazyVStack 懒加载机制，
@@ -210,13 +213,33 @@ struct NoteReaderView: View {
                     VStack(spacing: 12) {
                         ProgressView()
                             .tint(.white)
-                        Text("正在生成...")
+                        Text("generating".localized)
                             .font(ClaudeTypography.monoCaptionFont)
                             .foregroundStyle(.white)
                     }
                     .padding(20)
                     .background(Color.black.opacity(0.7))
                     .cornerRadius(10)
+                }
+            }
+        }
+        .overlay {
+            if isSyncing {
+                ZStack {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                    VStack(spacing: 12) {
+                        ProgressView()
+                            .tint(.white)
+                        Text(syncProgressMessage)
+                            .font(ClaudeTypography.monoCaptionFont)
+                            .foregroundStyle(.white)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(20)
+                    .background(Color.black.opacity(0.7))
+                    .cornerRadius(10)
+                    .frame(maxWidth: 280)
                 }
             }
         }
@@ -239,7 +262,7 @@ struct NoteReaderView: View {
                 if let targetURL = noteIndex[noteName.lowercased()] {
                     navigateToURL = IdentifiableURL(url: targetURL)
                 } else {
-                    toastMessage = "未找到笔记 \"\(noteName)\""
+                    toastMessage = "note_not_found".localized(arguments: noteName)
                     showToast = true
                 }
                 return .handled
@@ -281,7 +304,7 @@ struct NoteReaderView: View {
 
                     // 摘要信息
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("元数据 (Metadata)")
+                        Text("metadata".localized)
                             .font(ClaudeTypography.monoCaptionFont)
                             .foregroundStyle(ClaudeColors.textMuted)
                             .tracking(0.6)
@@ -289,7 +312,7 @@ struct NoteReaderView: View {
                         HStack(spacing: 12) {
                             if let tags = tags {
                                 HStack(spacing: 4) {
-                                    Text("Tags")
+                                    Text("tags".localized)
                                         .font(ClaudeTypography.monoCaptionFont)
                                         .foregroundStyle(ClaudeColors.textMuted)
                                     Text(tags)
@@ -299,7 +322,7 @@ struct NoteReaderView: View {
                             }
                             if let updated = updated {
                                 HStack(spacing: 4) {
-                                    Text("Updated")
+                                    Text("updated".localized)
                                         .font(ClaudeTypography.monoCaptionFont)
                                         .foregroundStyle(ClaudeColors.textMuted)
                                     Text(updated)
@@ -422,7 +445,7 @@ struct NoteReaderView: View {
 
     private func copyFullText() {
         UIPasteboard.general.string = markdownString
-        toastMessage = "原文已拷贝到剪贴板"
+        toastMessage = "copied_to_clipboard".localized
         showToast = true
     }
     
@@ -432,7 +455,7 @@ struct NoteReaderView: View {
             if let imageURL = generateLongScreenshot() {
                 shareItems = IdentifiableShareItems(items: [imageURL])
             } else {
-                toastMessage = "生成长图失败"
+                toastMessage = "generate_image_failed".localized
                 showToast = true
             }
             isExporting = false
@@ -445,7 +468,7 @@ struct NoteReaderView: View {
             if let pdfURL = generatePDF() {
                 shareItems = IdentifiableShareItems(items: [pdfURL])
             } else {
-                toastMessage = "生成 PDF 失败"
+                toastMessage = "generate_pdf_failed".localized
                 showToast = true
             }
             isExporting = false
@@ -455,7 +478,7 @@ struct NoteReaderView: View {
     private func saveProperties(_ newFrontmatter: [String: Any]) {
         isLoading = true
         
-        // 将 [String: Any] 转换为 JSON 兼容的 [String: Sendable] 字典，避免并发捕获警告
+        // 将 [String: Any] 转换为 JSON 兼容 of [String: Sendable] 字典，避免并发捕获警告
         // 在 Swift 中，String, Int, Double, Bool, Array, Dictionary 等基础 JSON 类型都是 Sendable 的
         var tempProperties: [String: Sendable] = [:]
         for (key, value) in newFrontmatter {
@@ -477,7 +500,7 @@ struct NoteReaderView: View {
             guard let rawText = try? String(contentsOf: fileURL, encoding: .utf8) else {
                 DispatchQueue.main.async {
                     isLoading = false
-                    toastMessage = "读取文件失败"
+                    toastMessage = "read_file_failed".localized
                     showToast = true
                 }
                 return
@@ -502,13 +525,38 @@ struct NoteReaderView: View {
                 
                 DispatchQueue.main.async {
                     loadNote()
-                    toastMessage = "属性已更新"
-                    showToast = true
+                    triggerAutoSync()
                 }
             } catch {
                 DispatchQueue.main.async {
                     isLoading = false
-                    toastMessage = "保存属性失败: \(error.localizedDescription)"
+                    toastMessage = "save_properties_failed".localized(arguments: error.localizedDescription)
+                    showToast = true
+                }
+            }
+        }
+    }
+
+    private func triggerAutoSync() {
+        isSyncing = true
+        syncProgressMessage = "sync_committing".localized
+        
+        Task {
+            do {
+                try await GitSyncService.shared.commitAndSync(fileURL: fileURL) { progress in
+                    Task { @MainActor in
+                        syncProgressMessage = progress
+                    }
+                }
+                Task { @MainActor in
+                    isSyncing = false
+                    toastMessage = "sync_success".localized
+                    showToast = true
+                }
+            } catch {
+                Task { @MainActor in
+                    isSyncing = false
+                    toastMessage = "sync_failed_detail".localized(arguments: error.localizedDescription)
                     showToast = true
                 }
             }
@@ -807,7 +855,7 @@ struct ImageView: View {
                             Image(systemName: "exclamationmark.triangle")
                                 .font(.title2)
                                 .foregroundStyle(ClaudeColors.textMuted)
-                            Text("图片加载失败")
+                            Text("image_load_failed".localized)
                                 .font(ClaudeTypography.monoCaptionFont)
                                 .foregroundStyle(ClaudeColors.textMuted)
                         }
@@ -939,7 +987,7 @@ struct FullScreenImageViewer: View {
                 VStack(spacing: 12) {
                     ProgressView()
                         .tint(ClaudeColors.textSecondary)
-                    Text("正在加载图片...")
+                    Text("loading_image".localized)
                         .font(ClaudeTypography.monoCaptionFont)
                         .foregroundStyle(ClaudeColors.textSecondary)
                 }
@@ -948,10 +996,10 @@ struct FullScreenImageViewer: View {
                     Image(systemName: "photo.badge.exclamationmark")
                         .font(.system(size: 40))
                         .foregroundStyle(ClaudeColors.textMuted)
-                    Text("图片加载失败")
+                    Text("image_load_failed".localized)
                         .font(ClaudeTypography.titleFont)
                         .foregroundStyle(ClaudeColors.text)
-                    Text("请检查网络连接或图片链接是否正确")
+                    Text("image_load_failed_desc".localized)
                         .font(ClaudeTypography.bodyFont)
                         .foregroundStyle(ClaudeColors.textSecondary)
                         .multilineTextAlignment(.center)
@@ -1211,7 +1259,7 @@ struct SetPropertiesSheet: View {
                                 switch field.type {
                                 case .date:
                                     DatePicker(
-                                        "选择日期",
+                                        "select_date".localized,
                                         selection: Binding<Date>(
                                             get: {
                                                 if let dateStr = properties[field.name] as? String,
@@ -1249,12 +1297,12 @@ struct SetPropertiesSheet: View {
                                                 Button(role: .destructive, action: {
                                                     properties[field.name] = ""
                                                 }) {
-                                                    Label("清除选择", systemImage: "trash")
+                                                    Label("clear_selection".localized, systemImage: "trash")
                                                 }
                                             }
                                         } label: {
                                             HStack {
-                                                Text(selectedValue.isEmpty ? "请选择" : selectedValue)
+                                                Text(selectedValue.isEmpty ? "please_select".localized : selectedValue)
                                                     .font(ClaudeTypography.bodyFont)
                                                     .foregroundStyle(selectedValue.isEmpty ? ClaudeColors.textSecondary : ClaudeColors.text)
                                                 
@@ -1278,7 +1326,7 @@ struct SetPropertiesSheet: View {
                                 case .tags:
                                     VStack(alignment: .leading, spacing: 12) {
                                         HStack {
-                                            TextField("输入新标签...", text: $newTag)
+                                            TextField("input_new_tag".localized, text: $newTag)
                                                 .font(ClaudeTypography.monoCaptionFont)
                                                 .padding(.horizontal, 12)
                                                 .frame(height: 38)
@@ -1292,7 +1340,7 @@ struct SetPropertiesSheet: View {
                                                 .textInputAutocapitalization(.never)
                                             
                                             Button(action: { addTag(to: field.name) }) {
-                                                Text("添加")
+                                                Text("add".localized)
                                                     .font(ClaudeTypography.monoCaptionFont.weight(.semibold))
                                                     .foregroundStyle(ClaudeColors.background)
                                                     .padding(.horizontal, 16)
@@ -1328,7 +1376,7 @@ struct SetPropertiesSheet: View {
                                     }
                                     
                                 case .text:
-                                    TextField("输入内容", text: Binding<String>(
+                                    TextField("input_content".localized, text: Binding<String>(
                                         get: { properties[field.name] as? String ?? "" },
                                         set: { properties[field.name] = $0 }
                                     ))
@@ -1359,16 +1407,16 @@ struct SetPropertiesSheet: View {
                 .padding(.vertical, 20)
             }
             .background(ClaudeColors.background)
-            .navigationTitle("设置属性")
+            .navigationTitle("set_properties".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("取消") { dismiss() }
+                    Button("cancel".localized) { dismiss() }
                         .font(ClaudeTypography.bodyFont)
                         .foregroundStyle(ClaudeColors.textSecondary)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("保存") {
+                    Button("save".localized) {
                         onSave(properties)
                         dismiss()
                     }

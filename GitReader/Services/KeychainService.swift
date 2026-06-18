@@ -73,10 +73,10 @@ enum KeychainError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .saveFailed(let status):
-            let message = SecCopyErrorMessageString(status, nil) as String? ?? "未知错误"
-            return "Keychain 存储失败: \(message) (\(status))"
+            let message = SecCopyErrorMessageString(status, nil) as String? ?? "Unknown"
+            return "keychain_save_failed".localized(arguments: message, Int32(status))
         case .encodingFailed:
-            return "Token 编码失败"
+            return "token_encoding_failed".localized
         }
     }
 }
