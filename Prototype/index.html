@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git Reader - MVP 原型</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ===== CSS Variables: Claude Aesthetic ===== */
+:root {
+  --bg: #FBFBFA;
+  --bg-card: #F5F5F2;
+  --border: #E5E5E0;
+  --border-strong: #D5D5CE;
+  --text: #1A1A1A;
+  --text-secondary: #7A7A74;
+  --text-muted: #B0B0AA;
+  --accent: #D97757;
+  --accent-hover: #C5684A;
+  --link: #5B7FA5;
+  --tag-bg: #EDEDE8;
+  --tag-text: #6A6A64;
+  --banner-offline: #F5F0E8;
+  --banner-offline-text: #B09060;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1A1A1A;
+    --bg-card: #242422;
+    --border: #333330;
+    --border-strong: #444440;
+    --text: #E8E8E4;
+    --text-secondary: #90908A;
+    --text-muted: #60605A;
+    --accent: #E08A6A;
+    --accent-hover: #D07755;
+    --link: #80AACA;
+    --tag-bg: #2A2A28;
+    --tag-text: #A0A09A;
+    --banner-offline: #2A2820;
+    --banner-offline-text: #C0A060;
+    --shadow-sm: none;
+  }
+}
+
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Serif SC', 'Playfair Display', Georgia, serif;
+  background: #EDECE8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== iPhone Frame ===== */
+.phone-frame {
+  width: 390px;
+  height: 844px;
+  background: var(--bg);
+  border-radius: 44px;
+  border: 8px solid #2A2A2A;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2), 0 0 0 2px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Dynamic Island */
+.phone-frame::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 34px;
+  background: #1A1A1A;
+  border-radius: 20px;
+  z-index: 100;
+}
+
+/* Status Bar */
+.status-bar {
+  height: 54px;
+  padding: 18px 28px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.status-bar .time { letter-spacing: 0.5px; }
+.status-bar .icons { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+
+/* ===== App Container ===== */
+.app-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ===== Screen Stack ===== */
+.screen {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+
+.screen.active {
+  transform: translateX(0);
+}
+
+.screen.pushing-out {
+  transform: translateX(-30%);
+}
+
+/* ===== Navigation Bar ===== */
+.nav-bar {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: relative;
+  z-index: 10;
+}
+
+.nav-back {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--link);
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.nav-back:hover { background: var(--tag-bg); }
+
+.nav-title {
+  flex: 1;
+  text-align: center;
+  font-family: 'Noto Serif SC', 'Playfair Display', serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 8px;
+}
+
+.nav-action {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.nav-action:hover { background: var(--tag-bg); color: var(--text); }
+.nav-action.syncing { animation: spin 1s linear infinite; color: var(--link); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== Offline Banner ===== */
+.offline-banner {
+  height: 0;
+  overflow: hidden;
+  background: var(--banner-offline);
+  color: var(--banner-offline-text);
+  font-size: 12px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: height 0.25s ease;
+  flex-shrink: 0;
+}
+
+.offline-banner.visible {
+  height: 34px;
+}
+
+/* ===== Screen Content ===== */
+.screen-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ===== RepoConfigView ===== */
+.config-screen .screen-content {
+  padding: 40px 24px;
+}
+
+.config-logo {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.config-logo .icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
+.config-logo h1 {
+  font-family: 'Playfair Display', 'Noto Serif SC', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+  margin-bottom: 6px;
+}
+
+.config-logo p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.config-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+}
+
+.form-group input {
+  width: 100%;
+  height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text);
+  transition: border-color 0.15s;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: var(--link);
+  box-shadow: 0 0 0 3px rgba(91,127,165,0.1);
+}
+
+.form-group input.error {
+  border-color: var(--accent);
+}
+
+.form-error {
+  font-size: 12px;
+  color: var(--accent);
+  margin-top: 6px;
+  display: none;
+}
+
+.form-error.visible { display: block; }
+
+.config-submit {
+  height: 48px;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: 10px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  margin-top: 8px;
+  letter-spacing: 0.3px;
+}
+
+.config-submit:hover { opacity: 0.88; }
+.config-submit:active { opacity: 0.75; }
+.config-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ===== FileListView ===== */
+.file-list {
+  padding: 8px 0;
+}
+
+.folder-section {
+  margin-bottom: 4px;
+}
+
+.folder-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+  gap: 8px;
+}
+
+.folder-header:hover { background: var(--bg-card); }
+
+.folder-chevron {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.folder-chevron.expanded { transform: rotate(90deg); }
+
+.folder-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.folder-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+.folder-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.folder-files {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.25s ease;
+}
+
+.folder-files.expanded {
+  max-height: 600px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  padding: 11px 20px 11px 42px;
+  cursor: pointer;
+  transition: background 0.1s;
+  gap: 10px;
+}
+
+.file-item:hover { background: var(--bg-card); }
+.file-item:active { background: var(--tag-bg); }
+
+.file-item-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.file-item-name {
+  font-family: 'Noto Serif SC', 'Playfair Display', serif;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.3;
+  flex: 1;
+}
+
+.file-item-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.file-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  padding: 3px 7px;
+  background: var(--tag-bg);
+  color: var(--tag-text);
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+
+/* Search */
+.search-container {
+  padding: 10px 16px;
+  flex-shrink: 0;
+}
+
+.search-input-wrap {
+  display: flex;
+  align-items: center;
+  height: 38px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 12px;
+  gap: 8px;
+  transition: border-color 0.15s;
+}
+
+.search-input-wrap:focus-within {
+  border-color: var(--border-strong);
+}
+
+.search-icon {
+  font-size: 14px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.search-input-wrap input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.search-input-wrap input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-clear {
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.search-clear:hover { background: var(--border); color: var(--text); }
+.search-clear.hidden { display: none; }
+
+/* ===== NoteReaderView ===== */
+.note-content {
+  padding: 24px 20px 40px;
+}
+
+.note-h1 {
+  font-family: 'Playfair Display', 'Noto Serif SC', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+  letter-spacing: -0.3px;
+  margin-bottom: 16px;
+}
+
+/* Frontmatter Card */
+.frontmatter-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 28px;
+  background: var(--bg);
+  transition: box-shadow 0.2s;
+}
+
+.frontmatter-card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.frontmatter-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+  gap: 10px;
+  transition: background 0.1s;
+}
+
+.frontmatter-header:hover { background: var(--bg-card); }
+
+.frontmatter-header-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--tag-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.frontmatter-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.frontmatter-header-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.frontmatter-header-meta {
+  display: flex;
+  gap: 12px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.frontmatter-meta-item {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.frontmatter-meta-item .label {
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+
+.frontmatter-toggle {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  border-radius: 6px;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.frontmatter-toggle:hover { background: var(--border); color: var(--text); }
+
+.frontmatter-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.frontmatter-body.expanded {
+  max-height: 400px;
+  padding: 0 14px 14px;
+}
+
+.frontmatter-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0 14px;
+}
+
+.frontmatter-kv {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 8px 14px;
+  font-size: 12px;
+  padding-top: 8px;
+}
+
+.frontmatter-key {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: right;
+  padding-top: 2px;
+}
+
+.frontmatter-value {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Note Body */
+.note-body {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--text);
+}
+
+.note-body h2 {
+  font-family: 'Playfair Display', 'Noto Serif SC', serif;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 32px 0 12px;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+
+.note-body h2:first-child { margin-top: 0; }
+
+.note-body p {
+  margin-bottom: 14px;
+}
+
+.note-body ul, .note-body ol {
+  padding-left: 20px;
+  margin-bottom: 14px;
+}
+
+.note-body li {
+  margin-bottom: 6px;
+}
+
+.note-body strong {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.note-body .wikilink {
+  color: var(--link);
+  text-decoration: none;
+  cursor: pointer;
+  border-bottom: 1px solid color-mix(in srgb, var(--link) 30%, transparent);
+  transition: border-color 0.15s;
+  padding: 0 1px;
+}
+
+.note-body .wikilink:hover {
+  border-bottom-color: var(--link);
+}
+
+.note-body code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  background: var(--tag-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+}
+
+.note-body .code-block {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 14px 0;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  overflow-x: auto;
+}
+
+.note-body .image-placeholder {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 16px 0;
+}
+
+/* ===== SettingsView ===== */
+.settings-content {
+  padding: 8px 0;
+}
+
+.settings-section {
+  margin-bottom: 24px;
+}
+
+.settings-section-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 8px 20px 6px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.1s;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-row:hover { background: var(--bg-card); }
+
+.settings-row-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.settings-row-label {
+  font-size: 14px;
+  color: var(--text);
+  flex: 1;
+}
+
+.settings-row-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: right;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== Empty State ===== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.empty-state-title {
+  font-family: 'Playfair Display', 'Noto Serif SC', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.empty-state-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ===== Toast ===== */
+.toast {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--text);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 50;
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ===== Scrollbar ===== */
+.screen-content::-webkit-scrollbar {
+  width: 3px;
+}
+
+.screen-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.screen-content::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 430px) {
+  .phone-frame {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+  .phone-frame::before { display: none; }
+  body { padding: 0; }
+}
+
+/* ===== Loader ===== */
+.sync-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.sync-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--link);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+</style>
+</head>
+<body>
+
+<div class="phone-frame" id="app">
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <span class="icons">
+      <span>●●●●○</span>
+      <span>WiFi</span>
+      <span style="font-size:14px;">▮</span>
+    </span>
+  </div>
+
+  <!-- App Container -->
+  <div class="app-container" id="appContainer">
+
+    <!-- ===== SCREEN: RepoConfigView ===== -->
+    <div class="screen config-screen active" data-screen="config">
+      <div class="nav-bar">
+        <div style="width:36px;"></div>
+        <div class="nav-title">Git Reader</div>
+        <div style="width:36px;"></div>
+      </div>
+      <div class="screen-content">
+        <div class="config-logo">
+          <div class="icon">📖</div>
+          <h1>Git Reader</h1>
+          <p>连接 Git 仓库<br>在手机上阅读 Obsidian 笔记</p>
+        </div>
+        <form class="config-form" onsubmit="event.preventDefault(); submitConfig();">
+          <div class="form-group">
+            <label>仓库地址</label>
+            <input type="text" id="repoUrl"
+                   placeholder="https://github.com/user/notes.git"
+                   value="https://github.com/user/my-second-brain.git"
+                   oninput="validateConfig()">
+            <div class="form-error" id="urlError">请输入有效的 Git 仓库地址</div>
+          </div>
+          <div class="form-group">
+            <label>Personal Access Token</label>
+            <input type="password" id="patToken"
+                   placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                   value="ghp_1A2b3C4d5E6f7G8h9I0j"
+                   oninput="validateConfig()">
+            <div class="form-error" id="tokenError">Token 不能为空</div>
+          </div>
+          <button type="submit" class="config-submit" id="submitBtn">连接仓库</button>
+        </form>
+        <p style="text-align:center;margin-top:28px;font-size:12px;color:var(--text-muted);line-height:1.6;">
+          Token 仅存储在设备 Keychain 中<br>仅用于只读访问，不会推送任何内容
+        </p>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: FileListView ===== -->
+    <div class="screen" data-screen="files">
+      <div class="nav-bar">
+        <div style="width:36px;"></div>
+        <div class="nav-title">My Second Brain</div>
+        <button class="nav-action" id="syncBtn" onclick="triggerSync()" title="同步">↻</button>
+        <button class="nav-action" onclick="pushScreen('settings')" title="设置">⚙</button>
+      </div>
+
+      <!-- Offline Banner -->
+      <div class="offline-banner" id="offlineBanner">
+        <span>⚡</span> 离线模式 · 数据截至 2 小时前
+      </div>
+
+      <!-- Search -->
+      <div class="search-container">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput"
+                 placeholder="搜索笔记名或标签..."
+                 oninput="filterFiles()">
+          <button class="search-clear hidden" id="searchClear" onclick="clearSearch()">✕</button>
+        </div>
+      </div>
+
+      <!-- File List -->
+      <div class="screen-content" id="fileListContainer">
+        <div class="file-list" id="fileList">
+          <!-- Folder: Daily Notes -->
+          <div class="folder-section" data-folder="daily">
+            <div class="folder-header" onclick="toggleFolder(this)">
+              <span class="folder-chevron">▶</span>
+              <span class="folder-icon">📅</span>
+              <span class="folder-name">Daily Notes</span>
+              <span class="folder-count">3</span>
+            </div>
+            <div class="folder-files">
+              <div class="file-item" onclick="openNote('daily-1')" data-search="今日思考 关于 AI 写作的随想 AI,writing">
+                <span class="file-item-icon">📄</span>
+                <span class="file-item-name">今日思考：关于 AI 写作的随想</span>
+              </div>
+              <div class="file-item" onclick="openNote('daily-2')" data-search="周报 2026-W24 工作总结 weekly,work">
+                <span class="file-item-icon">📄</span>
+                <span class="file-item-name">周报 2026-W24</span>
+              </div>
+              <div class="file-item" onclick="openNote('daily-3')" data-search="阅读笔记：《深度工作》 reading,productivity">
+                <span class="file-item-icon">📄</span>
+                <span class="file-item-name">阅读笔记：《深度工作》</span>
+                <div class="file-item-tags">
+                  <span class="file-tag">reading</span>
+                  <span class="file-tag">productivity</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Folder: Projects -->
+          <div class="folder-section" data-folder="projects">
+            <div class="folder-header" onclick="toggleFolder(this)">
+              <span class="folder-chevron">▶</span>
+              <span class="folder-icon">📁</span>
+              <span class="folder-name">Projects</span>
+              <span class="folder-count">2</span>
+            </div>
+            <div class="folder-files">
+              <div class="file-item" onclick="openNote('project-1')" data-search="Git Reader 产品设计文档 project,git-reader">
+                <span class="file-item-icon">📄</span>
+                <span class="file-item-name">Git Reader 产品设计</span>
+                <div class="file-item-tags">
+                  <span class="file-tag">project</span>
+                  <span class="file-tag">git-reader</span>
+                </div>
+              </div>
+              <div class="file-item" onclick="openNote('project-2')" data-search="Side Project 想法清单 ideas">
+                <span class="file-item-icon">📄</span>
+                <span class="file-item-name">Side Project 想法清单</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Folder: Knowledge -->
+          <div class="folder-section" data-folder="knowledge">
+            <div class="folder-header" onclick="toggleFolder(this)">
+              <span class="folder-chevron">▶</span>
+              <span class="folder-icon">🧠</span>
+              <span class="folder-name">Knowledge Base</span>
+              <span class="folder-count">2</span>
+            </div>
+            <div class="folder-files">
+              <div class="file-item" onclick="openNote('kb-1')" data-search="SwiftUI NavigationStack 使用指南 swift,ios">
+                <span class="file-item-icon">📄</span>
+                <span class="file-item-name">SwiftUI NavigationStack 指南</span>
+                <div class="file-item-tags">
+                  <span class="file-tag">swift</span>
+                  <span class="file-tag">ios</span>
+                </div>
+              </div>
+              <div class="file-item" onclick="openNote('kb-2')" data-search="Markdown Obsidian 语法速查 writing">
+                <span class="file-item-icon">📄</span>
+                <span class="file-item-name">Obsidian 语法速查表</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State (hidden by default) -->
+        <div class="empty-state" id="emptyState" style="display:none;">
+          <div class="empty-state-icon">📭</div>
+          <div class="empty-state-title">没有找到匹配的笔记</div>
+          <div class="empty-state-desc">试试其他关键词<br>或点击同步获取最新内容</div>
+        </div>
+
+        <!-- Sync Loader (hidden by default) -->
+        <div class="sync-loader" id="syncLoader" style="display:none;">
+          <div class="sync-spinner"></div>
+          <span>正在同步...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: NoteReaderView ===== -->
+    <div class="screen" data-screen="reader">
+      <div class="nav-bar">
+        <button class="nav-back" onclick="popScreen()">←</button>
+        <div class="nav-title" id="readerTitle">笔记标题</div>
+        <div style="width:36px;"></div>
+      </div>
+      <div class="screen-content" id="readerContent">
+        <!-- Filled dynamically -->
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: SettingsView ===== -->
+    <div class="screen" data-screen="settings">
+      <div class="nav-bar">
+        <button class="nav-back" onclick="popScreen()">←</button>
+        <div class="nav-title">设置</div>
+        <div style="width:36px;"></div>
+      </div>
+      <div class="screen-content">
+        <div class="settings-content">
+          <div class="settings-section">
+            <div class="settings-section-title">仓库信息</div>
+            <div class="settings-row">
+              <span class="settings-row-icon">🔗</span>
+              <span class="settings-row-label">仓库地址</span>
+              <span class="settings-row-value">github.com/user/my-second-brain</span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-row-icon">🔑</span>
+              <span class="settings-row-label">Access Token</span>
+              <span class="settings-row-value">ghp_1A••••••••I0j</span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-row-icon">🌿</span>
+              <span class="settings-row-label">分支</span>
+              <span class="settings-row-value">main</span>
+            </div>
+            <div class="settings-row" onclick="triggerSync()">
+              <span class="settings-row-icon">🔄</span>
+              <span class="settings-row-label">立即同步</span>
+              <span class="settings-row-value">刚刚更新</span>
+            </div>
+          </div>
+          <div class="settings-section">
+            <div class="settings-section-title">关于</div>
+            <div class="settings-row">
+              <span class="settings-row-icon">📖</span>
+              <span class="settings-row-label">Git Reader</span>
+              <span class="settings-row-value">v0.1.0 MVP</span>
+            </div>
+            <div class="settings-row" onclick="showToast('配置已清除'); resetToConfig();">
+              <span class="settings-row-icon">🗑</span>
+              <span class="settings-row-label" style="color:var(--accent);">断开仓库连接</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+  </div>
+</div>
+
+<script>
+// ===== State Management =====
+const navStack = ['config']; // Navigation stack, bottom is root
+let offlineMode = false;
+let syncInProgress = false;
+
+// ===== Note Content Database =====
+const notes = {
+  'daily-1': {
+    title: '今日思考：关于 AI 写作的随想',
+    frontmatter: {
+      date: '2026-06-15',
+      tags: ['AI', 'writing'],
+      updated: '2026-06-15 22:30',
+      author: 'Hui',
+      status: 'draft'
+    },
+    body: `<p>今天在使用 Claude 辅助写作时，有一个有趣的体会：<strong>AI 更像是一个"思维放大器"而非"思维替代者"</strong>。</p>
+<p>我的工作流是这样的：</p>
+<ul>
+  <li>先用自己的语言写出核心观点和框架</li>
+  <li>让 AI 帮忙扩写和润色细节</li>
+  <li>最后再自己审校和调整</li>
+</ul>
+<p>这个过程让我想起卡尔·纽波特在 <span class="wikilink" onclick="openNote('daily-3')">[[阅读笔记：《深度工作》]]</span> 中提到的观点：真正的创造性工作需要在"专注模式"和"发散模式"之间切换。AI 恰好填补了发散模式的部分——它可以快速生成多种可能性，而人类负责做出选择和判断。</p>
+<p>不过也有担忧：过度依赖 AI 会不会削弱我们独立思考的能力？这让我想写一篇更深入的文章来探讨这个问题。</p>
+<h2>代码示例</h2>
+<div class="code-block">func amplifyThinking(
+  _ idea: String,
+  with ai: AITool
+) -> [Variation] {
+  let expanded = ai.generate(idea)
+  return human.select(expanded)
+}</div>
+<div class="image-placeholder">🖼 思维放大器概念图</div>
+<p>后续准备在 <span class="wikilink" onclick="openNote('project-1')">[[Git Reader 产品设计]]</span> 中应用类似的设计哲学——让工具服务于思维，而非反过来。</p>`
+  },
+  'daily-2': {
+    title: '周报 2026-W24',
+    frontmatter: {
+      date: '2026-06-14',
+      tags: ['weekly', 'work'],
+      week: 'W24',
+      updated: '2026-06-14 18:00'
+    },
+    body: `<h2>本周完成</h2>
+<ul>
+  <li>完成 Git Reader 技术方案评审</li>
+  <li>调研 swift-libgit2 浅克隆方案的可行性</li>
+  <li>搭建 Xcode 工程骨架，验证 swift-markdown + textual 渲染链路</li>
+</ul>
+<h2>下周计划</h2>
+<ul>
+  <li>实现 Frontmatter 分离与 Yaml 解析模块</li>
+  <li>接入 Git 认证与 clone 流程</li>
+  <li>输出 <span class="wikilink" onclick="openNote('kb-1')">[[SwiftUI NavigationStack 指南]]</span> 在项目中的实践总结</li>
+</ul>
+<h2>遇到的问题</h2>
+<p>textual 库的版本与 swift-markdown 最新版存在 API 兼容问题，需要锁定版本或寻找替代方案。详见 Issue #12。</p>`
+  },
+  'daily-3': {
+    title: '阅读笔记：《深度工作》',
+    frontmatter: {
+      date: '2026-06-12',
+      tags: ['reading', 'productivity'],
+      author: 'Cal Newport',
+      rating: '5/5',
+      updated: '2026-06-12 15:20'
+    },
+    body: `<h2>核心观点</h2>
+<p>在碎片化时代，<strong>深度工作能力正成为一种稀缺且高价值的技能</strong>。</p>
+<h2>四种深度工作策略</h2>
+<ul>
+  <li><strong>修道院式</strong>：完全与外界隔绝</li>
+  <li><strong>双峰式</strong>：划分深度与浅层时段</li>
+  <li><strong>节奏式</strong>：每天固定时段深度工作</li>
+  <li><strong>记者式</strong>：随时切换到深度模式</li>
+</ul>
+<p>我个人倾向于"节奏式"，配合番茄钟效果最好。这点在 <span class="wikilink" onclick="openNote('daily-1')">[[今日思考：关于 AI 写作的随想]]</span> 中也提到过——保持对工具的主动权很重要。</p>
+<h2>行动项</h2>
+<ul>
+  <li>每天上午 9-11 点设为深度工作时间</li>
+  <li>关闭所有 IM 通知</li>
+  <li>用 <span class="wikilink" onclick="openNote('kb-2')">[[Obsidian 语法速查表]]</span> 做日结记录</li>
+</ul>`
+  },
+  'project-1': {
+    title: 'Git Reader 产品设计',
+    frontmatter: {
+      date: '2026-06-10',
+      tags: ['project', 'git-reader'],
+      status: 'active',
+      priority: 'P0',
+      updated: '2026-06-16 23:00'
+    },
+    body: `<h2>产品定位</h2>
+<p>专为 <strong>Obsidian + Git 用户</strong> 打造的 iOS 移动端只读阅读器。</p>
+<h2>核心原则</h2>
+<ul>
+  <li>零编辑入口，杜绝合并冲突</li>
+  <li>Shallow Clone，极速同步</li>
+  <li>Claude 风格美学，沉浸式阅读</li>
+</ul>
+<h2>技术栈</h2>
+<div class="code-block">swift-libgit2 → swift-markdown → textual → SwiftUI</div>
+<p>详见技术设计文档。这个项目的进展可以参考 <span class="wikilink" onclick="openNote('daily-2')">[[周报 2026-W24]]</span>。</p>
+<div class="image-placeholder">🖼 渲染管线架构图</div>`
+  },
+  'project-2': {
+    title: 'Side Project 想法清单',
+    frontmatter: {
+      date: '2026-05-20',
+      tags: ['ideas'],
+      updated: '2026-06-01 10:00'
+    },
+    body: `<h2>待评估的想法</h2>
+<ul>
+  <li><strong>AI 日记助手</strong>：基于语音输入自动生成结构化日记</li>
+  <li><strong>代码片段管理器</strong>：支持 tags 和全文搜索</li>
+  <li><strong>读书笔记分享平台</strong>：Markdown 笔记一键发布</li>
+</ul>
+<p>优先级还没有排，欢迎补充。</p>`
+  },
+  'kb-1': {
+    title: 'SwiftUI NavigationStack 指南',
+    frontmatter: {
+      date: '2026-05-28',
+      tags: ['swift', 'ios'],
+      platform: 'iOS 17+',
+      updated: '2026-06-08 14:00'
+    },
+    body: `<h2>基本用法</h2>
+<p>从 iOS 16 开始，Apple 引入了 <code>NavigationStack</code> 来替代旧的 <code>NavigationView</code>。</p>
+<div class="code-block">
+NavigationStack {
+  List(items) { item in
+    NavigationLink(item.title, value: item)
+  }
+  .navigationDestination(for: Item.self) { item in
+    DetailView(item: item)
+  }
+}</div>
+<h2>核心优势</h2>
+<ul>
+  <li>支持编程式导航（通过 <code>NavigationPath</code>）</li>
+  <li>自动管理返回栈和手势</li>
+  <li>与 SwiftUI Observable 宏深度集成</li>
+</ul>
+<p>这个特性将用在 <span class="wikilink" onclick="openNote('project-1')">[[Git Reader 产品设计]]</span> 的笔记导航中。</p>`
+  },
+  'kb-2': {
+    title: 'Obsidian 语法速查表',
+    frontmatter: {
+      date: '2026-04-15',
+      tags: ['writing'],
+      updated: '2026-05-20 09:00'
+    },
+    body: `<h2>常用语法</h2>
+<ul>
+  <li><code>[[笔记名]]</code> — 内部链接</li>
+  <li><code>[[笔记名|别名]]</code> — 带别名的链接</li>
+  <li><code>![[笔记名]]</code> — 嵌入笔记内容（暂不支持）</li>
+  <li><code>---</code> 包裹 YAML — Frontmatter 元数据</li>
+</ul>
+<h2>推荐插件</h2>
+<ul>
+  <li>Dataview — 数据查询</li>
+  <li>Templater — 模板系统</li>
+  <li>Calendar — 日历视图</li>
+</ul>`
+  }
+};
+
+// ===== Navigation =====
+function pushScreen(screenName) {
+  const currentScreen = navStack[navStack.length - 1];
+  const currentEl = document.querySelector(`[data-screen="${currentScreen}"]`);
+  const targetEl = document.querySelector(`[data-screen="${screenName}"]`);
+
+  if (!targetEl || currentScreen === screenName) return;
+
+  // Prepare the target screen
+  if (screenName === 'reader') {
+    // Reader is prepared by openNote()
+  }
+
+  // Animate
+  currentEl.classList.add('pushing-out');
+  targetEl.classList.add('active');
+
+  navStack.push(screenName);
+
+  // Cleanup after animation
+  setTimeout(() => {
+    currentEl.classList.remove('active', 'pushing-out');
+  }, 350);
+}
+
+function popScreen() {
+  if (navStack.length <= 1) return;
+
+  const currentScreen = navStack.pop();
+  const previousScreen = navStack[navStack.length - 1];
+
+  const currentEl = document.querySelector(`[data-screen="${currentScreen}"]`);
+  const prevEl = document.querySelector(`[data-screen="${previousScreen}"]`);
+
+  prevEl.classList.add('active');
+  currentEl.classList.remove('active');
+}
+
+function goToScreen(screenName) {
+  // Reset navigation stack
+  while (navStack.length > 1) {
+    const s = navStack.pop();
+    document.querySelector(`[data-screen="${s}"]`).classList.remove('active');
+  }
+  const root = navStack[0];
+  document.querySelector(`[data-screen="${root}"]`).classList.remove('active');
+
+  navStack.length = 0;
+  navStack.push(screenName);
+  document.querySelector(`[data-screen="${screenName}"]`).classList.add('active');
+}
+
+// ===== Repo Config =====
+function validateConfig() {
+  const url = document.getElementById('repoUrl').value.trim();
+  const token = document.getElementById('patToken').value.trim();
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = !url || !token;
+
+  // Show/hide errors on blur
+  document.getElementById('urlError').classList.remove('visible');
+  document.getElementById('tokenError').classList.remove('visible');
+}
+
+function submitConfig() {
+  const url = document.getElementById('repoUrl').value.trim();
+  const token = document.getElementById('patToken').value.trim();
+
+  if (!url || !token) {
+    if (!url) document.getElementById('urlError').classList.add('visible');
+    if (!token) document.getElementById('tokenError').classList.add('visible');
+    return;
+  }
+
+  // Simulate connection
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = '正在连接...';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    btn.textContent = '连接仓库';
+    btn.disabled = false;
+    goToScreen('files');
+    showToast('✓ 仓库连接成功');
+  }, 1500);
+}
+
+function resetToConfig() {
+  goToScreen('config');
+  document.getElementById('repoUrl').value = '';
+  document.getElementById('patToken').value = '';
+  document.getElementById('submitBtn').disabled = true;
+}
+
+// ===== File List =====
+function toggleFolder(header) {
+  const section = header.closest('.folder-section');
+  const chevron = header.querySelector('.folder-chevron');
+  const files = section.querySelector('.folder-files');
+
+  chevron.classList.toggle('expanded');
+  files.classList.toggle('expanded');
+}
+
+function filterFiles() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  const clearBtn = document.getElementById('searchClear');
+  const fileItems = document.querySelectorAll('.file-item');
+  const folderSections = document.querySelectorAll('.folder-section');
+  const emptyState = document.getElementById('emptyState');
+
+  clearBtn.classList.toggle('hidden', !query);
+
+  let anyVisible = false;
+
+  folderSections.forEach(section => {
+    let sectionHasVisible = false;
+
+    section.querySelectorAll('.file-item').forEach(item => {
+      const searchData = item.getAttribute('data-search') || '';
+      const name = item.querySelector('.file-item-name').textContent.toLowerCase();
+      const matches = !query || name.includes(query) || searchData.toLowerCase().includes(query);
+
+      item.style.display = matches ? '' : 'none';
+      if (matches) sectionHasVisible = true;
+    });
+
+    section.style.display = sectionHasVisible ? '' : 'none';
+    if (sectionHasVisible) anyVisible = true;
+
+    // Auto-expand folder when searching
+    if (query && sectionHasVisible) {
+      section.querySelector('.folder-chevron').classList.add('expanded');
+      section.querySelector('.folder-files').classList.add('expanded');
+    } else if (!query) {
+      section.querySelector('.folder-chevron').classList.remove('expanded');
+      section.querySelector('.folder-files').classList.remove('expanded');
+    }
+  });
+
+  emptyState.style.display = (!anyVisible && query) ? '' : 'none';
+  document.getElementById('fileList').style.display = anyVisible || !query ? '' : 'none';
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  filterFiles();
+  document.getElementById('searchInput').focus();
+}
+
+// ===== Note Reading =====
+function openNote(noteId) {
+  const note = notes[noteId];
+  if (!note) return;
+
+  // Set title
+  document.getElementById('readerTitle').textContent = note.title;
+
+  // Build note content
+  const tags = (note.frontmatter.tags || []).join(', ');
+  const updated = note.frontmatter.updated || note.frontmatter.date;
+
+  // Build frontmatter KV pairs
+  let kvHTML = '';
+  for (const [key, value] of Object.entries(note.frontmatter)) {
+    const displayValue = Array.isArray(value) ? value.join(', ') : value;
+    kvHTML += `<div class="frontmatter-key">${key}</div><div class="frontmatter-value">${displayValue}</div>`;
+  }
+
+  const html = `
+    <div class="note-content" id="noteContent">
+      <h1 class="note-h1">${note.title}</h1>
+
+      <div class="frontmatter-card" id="frontmatterCard">
+        <div class="frontmatter-header" onclick="toggleFrontmatter()">
+          <div class="frontmatter-header-icon">📋</div>
+          <div class="frontmatter-header-info">
+            <div class="frontmatter-header-title">元数据 (Metadata)</div>
+            <div class="frontmatter-header-meta">
+              ${tags ? `<span class="frontmatter-meta-item"><span class="label">Tags</span> ${tags}</span>` : ''}
+              ${updated ? `<span class="frontmatter-meta-item"><span class="label">Updated</span> ${updated}</span>` : ''}
+            </div>
+          </div>
+          <button class="frontmatter-toggle" id="fmToggle" onclick="event.stopPropagation(); toggleFrontmatter();">展开</button>
+        </div>
+        <div class="frontmatter-divider" id="fmDivider" style="display:none;"></div>
+        <div class="frontmatter-body" id="fmBody">
+          <div class="frontmatter-kv">
+            ${kvHTML}
+          </div>
+        </div>
+      </div>
+
+      <div class="note-body">
+        ${note.body}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('readerContent').innerHTML = html;
+  document.getElementById('readerContent').scrollTop = 0;
+
+  // Navigate to reader
+  pushScreen('reader');
+}
+
+function toggleFrontmatter() {
+  const body = document.getElementById('fmBody');
+  const toggle = document.getElementById('fmToggle');
+  const divider = document.getElementById('fmDivider');
+  const isExpanded = body.classList.toggle('expanded');
+
+  toggle.textContent = isExpanded ? '收起' : '展开';
+  divider.style.display = isExpanded ? '' : 'none';
+}
+
+// ===== Sync =====
+function triggerSync() {
+  if (syncInProgress) return;
+  syncInProgress = true;
+
+  const btn = document.getElementById('syncBtn');
+  if (btn) {
+    btn.classList.add('syncing');
+  }
+
+  const loader = document.getElementById('syncLoader');
+  if (loader) {
+    loader.style.display = '';
+  }
+
+  setTimeout(() => {
+    syncInProgress = false;
+    if (btn) btn.classList.remove('syncing');
+    if (loader) loader.style.display = 'none';
+    showToast('✓ 同步完成');
+  }, 2000);
+}
+
+// ===== Offline Toggle =====
+function toggleOffline() {
+  offlineMode = !offlineMode;
+  const banner = document.getElementById('offlineBanner');
+  banner.classList.toggle('visible', offlineMode);
+  showToast(offlineMode ? '已切换到离线模式' : '已恢复在线模式');
+}
+
+// ===== Toast =====
+let toastTimer;
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2000);
+}
+
+// ===== Init =====
+document.addEventListener('DOMContentLoaded', () => {
+  validateConfig();
+
+  // Set up offline toggle (long press sync button)
+  const syncBtn = document.getElementById('syncBtn');
+  if (syncBtn) {
+    syncBtn.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      toggleOffline();
+    });
+  }
+
+  // Keyboard shortcut: Cmd+O to toggle offline
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'o') {
+      e.preventDefault();
+      toggleOffline();
+    }
+  });
+
+  // Swipe right to go back (simulate iOS gesture)
+  let touchStartX = 0;
+  document.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+  });
+
+  document.addEventListener('touchend', (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchEndX - touchStartX;
+    if (diff > 80 && navStack.length > 1) {
+      popScreen();
+    }
+  });
+
+  console.log('📖 Git Reader MVP 原型就绪');
+  console.log('  ⌘+O — 切换离线模式');
+  console.log('  右滑 — 返回上一页');
+  console.log('  长按同步按钮 — 切换离线');
+  console.log('');
+  console.log('  可用页面:');
+  console.log('    1. RepoConfigView — 仓库配置（启动页）');
+  console.log('    2. FileListView — 文件列表 + 搜索 + 同步');
+  console.log('    3. NoteReaderView — 笔记阅读 + Frontmatter 卡片 + WikiLinks');
+  console.log('    4. SettingsView — 设置页');
+});
+</script>
+
+</body>
+</html>

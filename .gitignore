@@ -1,0 +1,111 @@
+# OS X
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon files
+Icon\r
+\r
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on external volumes
+.applesavedpreview
+.WD_Backup
+
+# Xcode
+#
+# build/
+# Note: GBR build directory is typically $(PROJECT_DIR)/build
+build/
+DerivedData/
+*.placeholder
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.xcworkspace
+!default.xcworkspace
+*.xcuserstate
+*.xsynclog
+*.sharedscheme
+*.xcscheme
+!default.xcscheme
+*.xctest
+*.xctestrun
+*.xctestproducts
+*.xctestcoverage
+*.xctestcoverageproducts
+*.xctestrunproducts
+*.xctestruncoverage
+*.xctestruncoverageproducts
+*.xctestrunproducts
+*.xctestruncoverage
+*.xctestruncoverageproducts
+*.xctestrunproducts
+*.xctestruncoverage
+*.xctestruncoverageproducts
+
+# Swift Package Manager
+#
+# Add this line if you want to avoid checking in values from Objective-C/Swift builds
+.build/
+
+# CocoaPods
+#
+# We recommend against adding the Pods directory to your .gitignore. However
+# you should judge for yourself whether this is appropriate for your project.
+# Pods/
+
+# Carthage
+#
+# Carthage builds its dependencies into a local Carthage directory.
+Carthage/Build/
+
+# AccuRev
+.accurev/
+
+# Fastlane
+#
+# It is recommended to not store the screenshots in the git repo. Instead, use Fastlane to generate them.
+# fastlane/report.xml
+# fastlane/Preview.html
+# fastlane/screenshots/**/*.png
+# fastlane/test_output
+
+# CodeSigning / Provisioning Profiles
+*.cer
+*.cert
+*.p12
+*.pfx
+*.pem
+*.mobileprovision
+*.provisionprofile
+
+# Local configuration file (properties, secrets, etc)
+local.properties
+
+# AI Agent files
+.superpowers/
+.cursorrules
+.clauderules
+.copilotrules
+.claude/
+.codebuddy/
