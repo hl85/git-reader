@@ -153,6 +153,11 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         let relativePath = fileURL.path.replacingOccurrences(of: repoRootURL.path + "/", with: "")
 
         do {
+            // 0. 前置校验：在本地 commit 之前，先检查当前 Token 是否有 Push (写入) 权限
+            // 这样如果无权限，可以立刻报错，避免本地产生未同步的 commit
+            let token = KeychainService.shared.readToken() ?? ""
+            try await checkPushPermission(repoURL: repoURL, token: token)
+
             try await performGitOperation {
                 // 1. Commit local changes
                 progressHandler("sync_committing".localized)
@@ -755,6 +760,74 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
             throw error
         } catch {
             print("[GitSyncService] Connection test failed with error: \(error.localizedDescription)")
+            throw SyncError.unknown("connection_test_failed_with_error".localized(arguments: error.localizedDescription))
+        }
+    }
+
+    /// 检查当前 Token 是否对仓库有 Push (写入) 权限
+    func checkPushPermission(repoURL: String, token: String, session: URLSession = .shared) async throws {
+        print("[GitSyncService] Checking push permission for URL: \(repoURL)")
+        guard var components = URLComponents(string: repoURL) else {
+            print("[GitSyncService] Push permission check failed: Invalid repo URL")
+            throw SyncError.unknown("invalid_repo_url".localized)
+        }
+        
+        // 规范化路径，确保以 /info/refs 结尾
+        if components.path.hasSuffix(".git") {
+            components.path += "/info/refs"
+        } else {
+            if !components.path.hasSuffix("/") {
+                components.path += "/"
+            }
+            components.path += "info/refs"
+        }
+        
+        // 使用 git-receive-pack 探测写权限
+        components.queryItems = [URLQueryItem(name: "service", value: "git-receive-pack")]
+        
+        guard let url = components.url else {
+            print("[GitSyncService] Push permission check failed: Cannot build test URL")
+            throw SyncError.unknown("cannot_build_test_url".localized)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 10.0 // 10秒超时
+        
+        if !token.isEmpty {
+            let credentialString = "token:\(token)"
+            if let credentialData = credentialString.data(using: .utf8) {
+                let base64Credentials = credentialData.base64EncodedString()
+                request.setValue("Basic \(base64Credentials)", forHTTPHeaderField: "Authorization")
+            }
+        }
+        
+        do {
+            let (_, response) = try await session.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("[GitSyncService] Push permission check failed: Invalid server response")
+                throw SyncError.unknown("invalid_server_response".localized)
+            }
+            
+            print("[GitSyncService] Push permission check HTTP status code: \(httpResponse.statusCode)")
+            switch httpResponse.statusCode {
+            case 200:
+                print("[GitSyncService] Push permission check successful: Has write permission")
+                return // 拥有写权限
+            case 401, 403:
+                print("[GitSyncService] Push permission check failed: No write permission (401/403)")
+                throw SyncError.authFailed
+            case 404:
+                print("[GitSyncService] Push permission check failed: Repo does not exist")
+                throw SyncError.unknown("repo_does_not_exist".localized)
+            default:
+                print("[GitSyncService] Push permission check failed with status: \(httpResponse.statusCode)")
+                throw SyncError.unknown("connection_failed_with_status".localized(arguments: httpResponse.statusCode))
+            }
+        } catch let error as SyncError {
+            throw error
+        } catch {
+            print("[GitSyncService] Push permission check failed with error: \(error.localizedDescription)")
             throw SyncError.unknown("connection_test_failed_with_error".localized(arguments: error.localizedDescription))
         }
     }
