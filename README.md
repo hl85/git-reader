@@ -110,6 +110,34 @@ git-reader/
 
 Token 将安全存储于 iOS Keychain。
 
+## 版本与构建号管理
+
+本项目已配置**全自动版本与构建号管理**方案，无需手动修改 Xcode 中的 Version 和 Build：
+
+- **Build 号 (CURRENT_PROJECT_VERSION)**：自动设为当前 Git 仓库的**总提交次数 (Commit Count)**。它天然单调递增，且每个 Commit 唯一。
+- **Version 号 (MARKETING_VERSION)**：自动读取最新的 **Git Tag**（例如 `v0.1.2` 自动转化为 `0.1.2`）。如果没有打 Tag，则默认使用 `0.1.2`。
+
+### 工作原理
+
+1. 每次在 Xcode 中编译（Build/Archive）时，会自动触发 `Auto Update Version & Build` 脚本。
+2. 脚本计算最新的版本号和构建号，并写入 `GitReader/Version.xcconfig` 配置文件。
+3. Xcode 项目的 Build Settings 已经与该 `.xcconfig` 关联，从而动态更新 App 的版本信息。
+4. `GitReader/Version.xcconfig` 已加入 `.gitignore`，**绝对不会污染 Git 工作区**。
+
+### 如何发布新版本
+
+当你需要发布新版本时，只需在终端打一个 Git Tag 并推送：
+
+```bash
+# 1. 打一个版本 Tag (必须以 v 开头，例如 v0.1.3)
+git tag -a v0.1.3 -m "Release version 0.1.3"
+
+# 2. 推送 Tag 到远程仓库
+git push origin v0.1.3
+```
+
+下次编译时，App 的 Version 就会自动变为 `0.1.3`，Build 号也会自动递增为最新的提交数。
+
 ## 运行测试
 
 ```bash
