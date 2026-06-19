@@ -33,7 +33,7 @@ targets:
     info:
       path: GitReader/Info.plist
       properties:
-        CFBundleDisplayName: Git Reader
+        CFBundleDisplayName: Gits Reader
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSRequiresIPhoneOS: true

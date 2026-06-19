@@ -96,7 +96,7 @@ struct SplashView: View {
                 
                 // Typography
                 VStack(spacing: 8) {
-                    Text("GitReader")
+                    Text("Gits Reader")
                         .font(.custom("Georgia", size: 30))
                         .fontWeight(.medium)
                         .foregroundColor(ClaudeColors.text)

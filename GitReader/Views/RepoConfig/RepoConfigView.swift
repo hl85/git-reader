@@ -79,7 +79,7 @@ struct RepoConfigView: View {
             .frame(width: 120, height: 120)
 
             VStack(spacing: 8) {
-                Text("GitReader")
+                Text("Gits Reader")
                     .font(.custom("Georgia", size: 30))
                     .fontWeight(.medium)
                     .foregroundColor(ClaudeColors.text)

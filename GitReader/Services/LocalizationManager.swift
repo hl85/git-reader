@@ -89,13 +89,13 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
     private let translations: [String: [String: String]] = [
         // App Title / Header
         "git_reader": [
-            "en": "Git Reader",
-            "zh-Hans": "Git Reader",
-            "zh-Hant": "Git Reader",
-            "ja": "Git Reader",
-            "de": "Git Reader",
-            "fr": "Git Reader",
-            "ko": "Git Reader"
+            "en": "Gits Reader",
+            "zh-Hans": "Gits Reader",
+            "zh-Hant": "Gits Reader",
+            "ja": "Gits Reader",
+            "de": "Gits Reader",
+            "fr": "Gits Reader",
+            "ko": "Gits Reader"
         ],
         "connect_repo_subtitle": [
             "en": "Connect Git Repository\nRead Obsidian Notes on Your Phone",
@@ -419,13 +419,13 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
             "ko": "방금 업데이트됨"
         ],
         "property_template_management": [
-            "en": "Property Template",
-            "zh-Hans": "属性模板管理",
-            "zh-Hant": "屬性模板管理",
-            "ja": "プロパティテンプレート管理",
-            "de": "Eigenschaftsvorlage",
-            "fr": "Modèle de propriété",
-            "ko": "속성 템플릿 관리"
+            "en": "Metadata Template",
+            "zh-Hans": "元数据模板管理",
+            "zh-Hant": "元數據模板管理",
+            "ja": "メタデータテンプレート管理",
+            "de": "Metadaten-Vorlage",
+            "fr": "Modèle de métadonnées",
+            "ko": "메타데이터 템플릿 관리"
         ],
         "disconnect_repo": [
             "en": "Disconnect Repository",
@@ -567,13 +567,13 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
             "ko": "크게"
         ],
         "set_properties": [
-            "en": "Set Properties",
-            "zh-Hans": "设置属性",
-            "zh-Hant": "設置屬性",
-            "ja": "プロパティを設定",
-            "de": "Eigenschaften festlegen",
-            "fr": "Définir les propriétés",
-            "ko": "속성 설정"
+            "en": "Set Metadata",
+            "zh-Hans": "设置元数据",
+            "zh-Hant": "設置元數據",
+            "ja": "メタデータを設定",
+            "de": "Metadaten festlegen",
+            "fr": "Définir les métadonnées",
+            "ko": "메타데이터 설정"
         ],
         "copy_source": [
             "en": "Copy Source",
@@ -657,13 +657,13 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
             "ko": "PDF 생성 실패"
         ],
         "properties_updated": [
-            "en": "Properties updated",
-            "zh-Hans": "属性已更新",
-            "zh-Hant": "屬性已更新",
-            "ja": "プロパティが更新されました",
-            "de": "Eigenschaften aktualisiert",
-            "fr": "Propriétés mises à jour",
-            "ko": "속性がアップデート되었습니다"
+            "en": "Metadata updated",
+            "zh-Hans": "元数据已更新",
+            "zh-Hant": "元數據已更新",
+            "ja": "メタデータが更新されました",
+            "de": "Metadaten aktualisiert",
+            "fr": "Métadonnées mises à jour",
+            "ko": "메타데이터가 업데이트되었습니다"
         ],
         "sync_committing": [
             "en": "Committing local changes...",
@@ -720,13 +720,13 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
             "ko": "동기화 실패: %@"
         ],
         "save_properties_failed": [
-            "en": "Failed to save properties: %@",
-            "zh-Hans": "保存属性失败: %@",
-            "zh-Hant": "保存屬性失敗: %@",
-            "ja": "プロパティの保存に失敗しました: %@",
-            "de": "Speichern der Eigenschaften fehlgeschlagen: %@",
-            "fr": "Échec de l'enregistrement des propriétés : %@",
-            "ko": "속성 저장 실패: %@"
+            "en": "Failed to save metadata: %@",
+            "zh-Hans": "保存元数据失败: %@",
+            "zh-Hant": "保存元數據失敗: %@",
+            "ja": "メタデータの保存に失敗しました: %@",
+            "de": "Speichern der Metadaten fehlgeschlagen: %@",
+            "fr": "Échec de l'enregistrement des métadonnées : %@",
+            "ko": "메타데이터 저장 실패: %@"
         ],
         "read_file_failed": [
             "en": "Failed to read file",

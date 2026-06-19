@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Git Reader - MVP 原型</title>
+<title>Gits Reader - MVP 原型</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ===== CSS Variables: Claude Aesthetic ===== */
@@ -905,13 +905,13 @@ body {
     <div class="screen config-screen active" data-screen="config">
       <div class="nav-bar">
         <div style="width:36px;"></div>
-        <div class="nav-title">Git Reader</div>
+        <div class="nav-title">Gits Reader</div>
         <div style="width:36px;"></div>
       </div>
       <div class="screen-content">
         <div class="config-logo">
           <div class="icon">📖</div>
-          <h1>Git Reader</h1>
+          <h1>Gits Reader</h1>
           <p>连接 Git 仓库<br>在手机上阅读 Obsidian 笔记</p>
         </div>
         <form class="config-form" onsubmit="event.preventDefault(); submitConfig();">
@@ -1004,9 +1004,9 @@ body {
               <span class="folder-count">2</span>
             </div>
             <div class="folder-files">
-              <div class="file-item" onclick="openNote('project-1')" data-search="Git Reader 产品设计文档 project,git-reader">
+              <div class="file-item" onclick="openNote('project-1')" data-search="Gits Reader 产品设计文档 project,git-reader">
                 <span class="file-item-icon">📄</span>
-                <span class="file-item-name">Git Reader 产品设计</span>
+                <span class="file-item-name">Gits Reader 产品设计</span>
                 <div class="file-item-tags">
                   <span class="file-tag">project</span>
                   <span class="file-tag">git-reader</span>
@@ -1107,7 +1107,7 @@ body {
             <div class="settings-section-title">关于</div>
             <div class="settings-row">
               <span class="settings-row-icon">📖</span>
-              <span class="settings-row-label">Git Reader</span>
+              <span class="settings-row-label">Gits Reader</span>
               <span class="settings-row-value">v0.1.0 MVP</span>
             </div>
             <div class="settings-row" onclick="showToast('配置已清除'); resetToConfig();">
@@ -1160,7 +1160,7 @@ const notes = {
   return human.select(expanded)
 }</div>
 <div class="image-placeholder">🖼 思维放大器概念图</div>
-<p>后续准备在 <span class="wikilink" onclick="openNote('project-1')">[[Git Reader 产品设计]]</span> 中应用类似的设计哲学——让工具服务于思维，而非反过来。</p>`
+<p>后续准备在 <span class="wikilink" onclick="openNote('project-1')">[[Gits Reader 产品设计]]</span> 中应用类似的设计哲学——让工具服务于思维，而非反过来。</p>`
   },
   'daily-2': {
     title: '周报 2026-W24',
@@ -1172,7 +1172,7 @@ const notes = {
     },
     body: `<h2>本周完成</h2>
 <ul>
-  <li>完成 Git Reader 技术方案评审</li>
+  <li>完成 Gits Reader 技术方案评审</li>
   <li>调研 swift-libgit2 浅克隆方案的可行性</li>
   <li>搭建 Xcode 工程骨架，验证 swift-markdown + textual 渲染链路</li>
 </ul>
@@ -1212,7 +1212,7 @@ const notes = {
 </ul>`
   },
   'project-1': {
-    title: 'Git Reader 产品设计',
+    title: 'Gits Reader 产品设计',
     frontmatter: {
       date: '2026-06-10',
       tags: ['project', 'git-reader'],
@@ -1273,7 +1273,7 @@ NavigationStack {
   <li>自动管理返回栈和手势</li>
   <li>与 SwiftUI Observable 宏深度集成</li>
 </ul>
-<p>这个特性将用在 <span class="wikilink" onclick="openNote('project-1')">[[Git Reader 产品设计]]</span> 的笔记导航中。</p>`
+<p>这个特性将用在 <span class="wikilink" onclick="openNote('project-1')">[[Gits Reader 产品设计]]</span> 的笔记导航中。</p>`
   },
   'kb-2': {
     title: 'Obsidian 语法速查表',
@@ -1592,7 +1592,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  console.log('📖 Git Reader MVP 原型就绪');
+  console.log('📖 Gits Reader MVP 原型就绪');
   console.log('  ⌘+O — 切换离线模式');
   console.log('  右滑 — 返回上一页');
   console.log('  长按同步按钮 — 切换离线');

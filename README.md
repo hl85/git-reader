@@ -1,4 +1,4 @@
-# Git Reader
+# Gits Reader
 
 > 专为 Obsidian + Git 用户打造的 iOS 移动端"纯净只读"阅读器。
 
@@ -10,7 +10,7 @@
 
 ## 概述
 
-Git Reader 让你在 iPhone 上随时翻阅 Obsidian 知识库笔记。通过 Git 浅克隆拉取仓库，零编辑入口杜绝多端合并冲突，支持 WikiLinks 跳转、Frontmatter 阅读和离线浏览。
+Gits Reader 让你在 iPhone 上随时翻阅 Obsidian 知识库笔记。通过 Git 浅克隆拉取仓库，零编辑入口杜绝多端合并冲突，支持 WikiLinks 跳转、Frontmatter 阅读和离线浏览。
 
 | 特性 | 说明 |
 |------|------|

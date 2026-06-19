@@ -6,7 +6,7 @@ import Security
 final class KeychainService: @unchecked Sendable {
     static let shared = KeychainService()
 
-    private let service = "com.gitreader.pat"
+    private let service = "com.gitsreader.pat"
     private let account = "personal-access-token"
 
     private init() {}

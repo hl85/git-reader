@@ -11,9 +11,9 @@
 		110A1022E50A583A506D23E8 /* PropertyTemplateSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71879B60620583AE55BA38AC /* PropertyTemplateSettingsView.swift */; };
 		176D6A52331AC6E9159B8390 /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2421FDFA4E258E1974140895 /* SearchService.swift */; };
 		1E29EC26980F7EA6F7FEC59D /* ClaudeColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61D4448596C6ED1B1D8A20B9 /* ClaudeColors.swift */; };
-		1E2CE4A8627BB98965C1A4FC /* GitReaderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20529DA9B0C91B406B2EBF86 /* GitReaderApp.swift */; };
 		1E2CE4A8627BB98965C1A499 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20529DA9B0C91B406B2EBF99 /* SplashView.swift */; };
 		1E2CE4A8627BB98965C1A49A /* SplashWrapperView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20529DA9B0C91B406B2EBF9A /* SplashWrapperView.swift */; };
+		1E2CE4A8627BB98965C1A4FC /* GitReaderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20529DA9B0C91B406B2EBF86 /* GitReaderApp.swift */; };
 		291E483DB19A010AEB210DD8 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5E0D7EA133CC0C892A959C2 /* SettingsView.swift */; };
 		35BECBDAC876F82F673E6097 /* ClaudeTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 728F9E347DEF93F235D240C0 /* ClaudeTypography.swift */; };
 		35CEEB70EBC198D5A0C1F366 /* RepoConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505124761EFCBA0AB0DDAA57 /* RepoConfigView.swift */; };
@@ -22,7 +22,6 @@
 		73E65CA8E6E584726A436926 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1188C8F6E8CB0107B1DCCA8A /* NetworkMonitor.swift */; };
 		85C956C3A9A8F2231DC140FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4EDA67752589C9F91C3CEABE /* Assets.xcassets */; };
 		8DC6B5A953DFE7D4E3928BF9 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C367D8D3694C8696B95AFC69 /* KeychainService.swift */; };
-		F2E1D0C9B8A7F6E5D4C3B2A1 /* LocalizationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* LocalizationManager.swift */; };
 		9E9C8AC2A079E5F54D0216CE /* MarkdownPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB26673C833956C8999B2E35 /* MarkdownPipeline.swift */; };
 		A09C88140B3CFE463361EA05 /* SwiftMarkdownTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD205FDD534662E0A75490F /* SwiftMarkdownTypes.swift */; };
 		A6366A0448C3910F328F8887 /* NoteReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB28F52C696F104FDFC23828 /* NoteReaderView.swift */; };
@@ -37,6 +36,7 @@
 		E6B761D28C5F92DEB0E4BD7E /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF0E05B1035D81629FED9E7 /* Components.swift */; };
 		E9F9E3D3333363549F2B3E90 /* RootRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41771F65E4EA620F9147A40A /* RootRouter.swift */; };
 		EA2219DDE05313EAA7EB8C6B /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = D4E11E6D0B2AF9A0F2DC49C7 /* Markdown */; };
+		F2E1D0C9B8A7F6E5D4C3B2A1 /* LocalizationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* LocalizationManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -57,12 +57,12 @@
 		7484F7A019289C5329C28944 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		77DA7CB71232DBFC1B161E51 /* GitReader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GitReader.entitlements; sourceTree = "<group>"; };
 		7FD205FDD534662E0A75490F /* SwiftMarkdownTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftMarkdownTypes.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* LocalizationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationManager.swift; sourceTree = "<group>"; };
 		A3C55EDCA91AFAAFA6C9A160 /* ObsidianElementRewriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObsidianElementRewriter.swift; sourceTree = "<group>"; };
 		A5E0D7EA133CC0C892A959C2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B7DE29E6CCDFF1BC3B6960A6 /* GitSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitSyncService.swift; sourceTree = "<group>"; };
 		BB26673C833956C8999B2E35 /* MarkdownPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPipeline.swift; sourceTree = "<group>"; };
 		C367D8D3694C8696B95AFC69 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F6A7B8C9D0E1F2 /* LocalizationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationManager.swift; sourceTree = "<group>"; };
 		CB28F52C696F104FDFC23828 /* NoteReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteReaderView.swift; sourceTree = "<group>"; };
 		CBF0E05B1035D81629FED9E7 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		DDF5CF6AD64E7B763584DA90 /* PropertyTemplateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyTemplateManager.swift; sourceTree = "<group>"; };
@@ -195,15 +195,6 @@
 			path = FileList;
 			sourceTree = "<group>";
 		};
-		F613044FD9612E718153C199 /* Splash */ = {
-			isa = PBXGroup;
-			children = (
-				20529DA9B0C91B406B2EBF99 /* SplashView.swift */,
-				20529DA9B0C91B406B2EBF9A /* SplashWrapperView.swift */,
-			);
-			path = Splash;
-			sourceTree = "<group>";
-		};
 		F1029BFD040B389BFB5BD853 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
@@ -238,6 +229,15 @@
 				F1029BFD040B389BFB5BD853 /* Settings */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		F613044FD9612E718153C199 /* Splash */ = {
+			isa = PBXGroup;
+			children = (
+				20529DA9B0C91B406B2EBF99 /* SplashView.swift */,
+				20529DA9B0C91B406B2EBF9A /* SplashWrapperView.swift */,
+			);
+			path = Splash;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -362,7 +362,7 @@
 				DEVELOPMENT_TEAM = Z4MYKJJYR6;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GitReader/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Git Reader";
+				INFOPLIST_KEY_CFBundleDisplayName = "Gits Reader";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -370,7 +370,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.holooapp.gitreader;
+				PRODUCT_BUNDLE_IDENTIFIER = com.holooapp.gitsreader;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -385,7 +385,7 @@
 				DEVELOPMENT_TEAM = Z4MYKJJYR6;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GitReader/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Git Reader";
+				INFOPLIST_KEY_CFBundleDisplayName = "Gits Reader";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -393,7 +393,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.holooapp.gitreader;
+				PRODUCT_BUNDLE_IDENTIFIER = com.holooapp.gitsreader;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

@@ -4,7 +4,7 @@
 <dict>
 	<key>keychain-access-groups</key>
 	<array>
-		<string>$(AppIdentifierPrefix)com.holooapp.gitreader</string>
+		<string>$(AppIdentifierPrefix)com.holooapp.gitsreader</string>
 	</array>
 </dict>
 </plist>

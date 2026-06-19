@@ -466,7 +466,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         }
 
         var signature = GitSignature()
-        let sigResult = gitSignatureNow(out: &signature, name: "Git Reader", email: "gitreader@example.com")
+        let sigResult = gitSignatureNow(out: &signature, name: "Gits Reader", email: "gitsreader@example.com")
         guard sigResult == .gitOK else {
             let detail = gitErrorLast()?.message ?? "未知"
             print("[GitSyncService] Commit failed: Create signature failed. Error: \(detail)")
@@ -622,7 +622,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
 
         // Commit the merge
         var signature = GitSignature()
-        let sigResult = gitSignatureNow(out: &signature, name: "Git Reader", email: "gitreader@example.com")
+        let sigResult = gitSignatureNow(out: &signature, name: "Gits Reader", email: "gitsreader@example.com")
         guard sigResult == .gitOK else {
             let detail = gitErrorLast()?.message ?? "未知"
             print("[GitSyncService] Merge failed: Create signature failed. Error: \(detail)")

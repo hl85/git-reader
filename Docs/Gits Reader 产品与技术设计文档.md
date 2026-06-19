@@ -1,4 +1,4 @@
-# Git Reader 产品与技术设计文档 (PDD/TDD)
+# Gits Reader 产品与技术设计文档 (PDD/TDD)
 
 ## 1. 产品设计方案 (PDD)
 

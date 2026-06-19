@@ -294,42 +294,57 @@ struct NoteReaderView: View {
                 HStack(spacing: 10) {
                     // 图标
                     ZStack {
-                        RoundedRectangle(cornerRadius: 6)
+                        RoundedRectangle(cornerRadius: isFrontmatterExpanded ? 5 : 6)
                             .fill(ClaudeColors.tagBackground)
-                            .frame(width: 28, height: 28)
+                            .frame(
+                                width: isFrontmatterExpanded ? 24 : 28,
+                                height: isFrontmatterExpanded ? 24 : 28
+                            )
                         Image(systemName: "info.circle")
-                            .font(.caption)
+                            .font(isFrontmatterExpanded ? .system(size: 11) : .caption)
                             .foregroundStyle(ClaudeColors.textMuted)
                     }
 
                     // 摘要信息
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: isFrontmatterExpanded ? 0 : 3) {
                         Text("metadata".localized)
                             .font(ClaudeTypography.monoCaptionFont)
                             .foregroundStyle(ClaudeColors.textMuted)
                             .tracking(0.6)
 
-                        HStack(spacing: 12) {
-                            if let tags = tags {
-                                HStack(spacing: 4) {
-                                    Text("tags".localized)
+                        if !isFrontmatterExpanded {
+                            Group {
+                                if let tags = tags, let updated = updated {
+                                    (Text("tags".localized + " ")
                                         .font(ClaudeTypography.monoCaptionFont)
                                         .foregroundStyle(ClaudeColors.textMuted)
-                                    Text(tags)
+                                    + Text(tags + "   ")
                                         .font(.system(.caption, design: .serif))
                                         .foregroundStyle(ClaudeColors.textSecondary)
-                                }
-                            }
-                            if let updated = updated {
-                                HStack(spacing: 4) {
-                                    Text("updated".localized)
+                                    + Text("updated".localized + " ")
                                         .font(ClaudeTypography.monoCaptionFont)
                                         .foregroundStyle(ClaudeColors.textMuted)
-                                    Text(updated)
+                                    + Text(updated)
                                         .font(.system(.caption, design: .serif))
-                                        .foregroundStyle(ClaudeColors.textSecondary)
+                                        .foregroundStyle(ClaudeColors.textSecondary))
+                                } else if let tags = tags {
+                                    (Text("tags".localized + " ")
+                                        .font(ClaudeTypography.monoCaptionFont)
+                                        .foregroundStyle(ClaudeColors.textMuted)
+                                    + Text(tags)
+                                        .font(.system(.caption, design: .serif))
+                                        .foregroundStyle(ClaudeColors.textSecondary))
+                                } else if let updated = updated {
+                                    (Text("updated".localized + " ")
+                                        .font(ClaudeTypography.monoCaptionFont)
+                                        .foregroundStyle(ClaudeColors.textMuted)
+                                    + Text(updated)
+                                        .font(.system(.caption, design: .serif))
+                                        .foregroundStyle(ClaudeColors.textSecondary))
                                 }
                             }
+                            .lineLimit(1)
+                            .truncationMode(.tail)
                         }
                     }
 
