@@ -40,3 +40,7 @@ struct RepositoryInfo: Codable, Identifiable, Hashable {
     var branch: String       // 同步分支
     var accountID: UUID?     // 关联的账号 ID（若为 nil 则表示无需认证的公开仓库）
 }
+
+extension Notification.Name {
+    static let activeRepositoryDidChange = Notification.Name("activeRepositoryDidChange")
+}
