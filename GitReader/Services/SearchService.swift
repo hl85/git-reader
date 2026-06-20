@@ -10,7 +10,18 @@ final class SearchService: ObservableObject, @unchecked Sendable {
 
     private let scanner = FileScannerService.shared
 
-    private init() {}
+    private init() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(activeRepositoryDidChange),
+            name: .activeRepositoryDidChange,
+            object: nil
+        )
+    }
+
+    @objc private func activeRepositoryDidChange() {
+        rebuildIndex()
+    }
 
     /// 重建搜索索引（同步或切换仓库后调用）
     func rebuildIndex() {

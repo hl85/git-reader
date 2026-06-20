@@ -5,7 +5,9 @@ final class FileScannerService: @unchecked Sendable {
     static let shared = FileScannerService()
 
     private let fileManager = FileManager.default
-    private let repoRoot: URL
+    private var repoRoot: URL {
+        GitSyncService.shared.repoRootURL
+    }
 
     /// 最大扫描深度（防止深层嵌套）
     private let maxDepth = 5
@@ -19,7 +21,19 @@ final class FileScannerService: @unchecked Sendable {
     private var cachedNoteIndex: [String: URL]?
 
     private init() {
-        self.repoRoot = GitSyncService.shared.repoRootURL
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(activeRepositoryDidChange),
+            name: .activeRepositoryDidChange,
+            object: nil
+        )
+    }
+
+    @objc private func activeRepositoryDidChange() {
+        lock.lock()
+        cachedNoteIndex = nil
+        lock.unlock()
+        print("[FileScannerService] Active repository changed, cleared note index cache.")
     }
 
     /// 扫描并构建目录树

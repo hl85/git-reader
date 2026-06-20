@@ -8,16 +8,66 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
 
     static let shared = GitSyncService()
 
-    /// 仓库 URL（持久化到 UserDefaults）
-    var repoURL: String {
-        get { UserDefaults.standard.string(forKey: "repoURL") ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: "repoURL") }
+    /// 所有已配置的仓库列表（持久化到 UserDefaults）
+    var repositories: [RepositoryInfo] {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: "repositories"),
+                  let list = try? JSONDecoder().decode([RepositoryInfo].self, from: data) else {
+                return []
+            }
+            return list
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue) {
+                UserDefaults.standard.set(data, forKey: "repositories")
+            }
+        }
     }
 
-    /// 分支名（持久化到 UserDefaults）
+    /// 当前激活的仓库 ID（持久化到 UserDefaults）
+    var activeRepositoryID: UUID? {
+        get {
+            guard let str = UserDefaults.standard.string(forKey: "activeRepositoryID") else { return nil }
+            return UUID(uuidString: str)
+        }
+        set {
+            UserDefaults.standard.set(newValue?.uuidString, forKey: "activeRepositoryID")
+            // 切换仓库时，通知相关服务刷新
+            NotificationCenter.default.post(name: .activeRepositoryDidChange, object: nil)
+        }
+    }
+
+    /// 当前激活的仓库信息
+    var activeRepository: RepositoryInfo? {
+        repositories.first { $0.id == activeRepositoryID }
+    }
+
+    /// 仓库 URL（兼容旧代码，动态获取当前激活仓库的 URL）
+    var repoURL: String {
+        get { activeRepository?.url ?? "" }
+        set {
+            if let activeID = activeRepositoryID {
+                var list = repositories
+                if let index = list.firstIndex(where: { $0.id == activeID }) {
+                    list[index].url = newValue
+                    repositories = list
+                }
+            }
+        }
+    }
+
+    /// 分支名（兼容旧代码，动态获取当前激活仓库的分支）
     var branch: String {
-        get { UserDefaults.standard.string(forKey: "repoBranch") ?? "main" }
-        set { UserDefaults.standard.set(newValue, forKey: "repoBranch") }
+        get { activeRepository?.branch ?? "main" }
+        set {
+            if let activeID = activeRepositoryID {
+                var list = repositories
+                if let index = list.firstIndex(where: { $0.id == activeID }) {
+                    list[index].branch = newValue
+                    repositories = list
+                }
+            }
+        }
     }
 
     /// 浅克隆深度（0 = 完整历史，1 = 仅最新 commit）
@@ -32,31 +82,34 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
 
     /// 仓库显示名（从 URL 提取）
     var repoDisplayName: String {
-        guard let url = URL(string: repoURL) else { return repoURL }
-        let name = url.lastPathComponent.replacingOccurrences(of: ".git", with: "")
-        return name.isEmpty ? repoURL : name
+        activeRepository?.name ?? repoURL
     }
 
     /// 是否已配置仓库（token + URL 存在即可，不要求本地仓库已克隆）
     var isConfigured: Bool {
-        let hasToken = KeychainService.shared.readToken() != nil
-        let hasURL = !repoURL.isEmpty
-        return hasToken && hasURL
+        guard let activeRepo = activeRepository else { return false }
+        if let accountID = activeRepo.accountID {
+            return KeychainService.shared.readToken(forAccountID: accountID) != nil
+        }
+        return true // 公开仓库不需要 token
     }
 
     /// 本地仓库目录是否存在且是一个有效的 Git 仓库
     var isLocalRepoExists: Bool {
+        guard activeRepositoryID != nil else { return false }
         let gitDir = repoRootURL.appendingPathComponent(".git")
         return FileManager.default.fileExists(atPath: gitDir.path)
     }
 
     /// 校验同步前置条件
     func validateForSync() throws {
-        guard KeychainService.shared.readToken() != nil else {
-            throw SyncError.tokenMissing
-        }
-        guard !repoURL.isEmpty else {
+        guard let activeRepo = activeRepository else {
             throw SyncError.repoNotConfigured
+        }
+        if let accountID = activeRepo.accountID {
+            guard KeychainService.shared.readToken(forAccountID: accountID) != nil else {
+                throw SyncError.tokenMissing
+            }
         }
         guard isLocalRepoExists else {
             throw SyncError.localRepoNotInitialized
@@ -65,16 +118,20 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
 
     /// 重置所有状态（断开连接时调用）
     func reset() {
-        // 清除 UserDefaults
-        UserDefaults.standard.removeObject(forKey: "repoURL")
-        UserDefaults.standard.removeObject(forKey: "repoBranch")
-        UserDefaults.standard.removeObject(forKey: "shallowDepth")
+        guard let activeID = activeRepositoryID else { return }
+        
+        // 从列表中移除当前仓库
+        var list = repositories
+        if let index = list.firstIndex(where: { $0.id == activeID }) {
+            list.remove(at: index)
+            repositories = list
+        }
 
-        // 清除 Keychain
-        KeychainService.shared.deleteToken()
-
-        // 删除本地仓库
+        // 删除本地仓库目录
         try? FileManager.default.removeItem(at: repoRootURL)
+
+        // 切换到下一个可用仓库，或者设为 nil
+        activeRepositoryID = repositories.first?.id
 
         // 重置同步状态
         Task { @MainActor in
@@ -84,7 +141,13 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
 
     /// 沙盒文档目录（Git 仓库根目录）
     var repoRootURL: URL {
-        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let base = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("repositories")
+        if let activeID = activeRepositoryID {
+            return base.appendingPathComponent(activeID.uuidString)
+        }
+        // 兼容旧路径，避免未设置 activeRepositoryID 时崩溃
+        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("repo")
     }
 
@@ -101,20 +164,33 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
     // MARK: - Public API
 
     /// 首次克隆仓库
-    func clone(repoURL: String, branch: String = "main") async throws {
-        print("[GitSyncService] clone API called with URL: \(repoURL), branch: \(branch)")
+    func clone(repoURL: String, branch: String = "main", accountID: UUID? = nil) async throws {
+        print("[GitSyncService] clone API called with URL: \(repoURL), branch: \(branch), accountID: \(String(describing: accountID))")
         await updateState(.syncing)
 
-        let token = KeychainService.shared.readToken() ?? ""
+        let token = accountID != nil ? (KeychainService.shared.readToken(forAccountID: accountID) ?? "") : ""
+
+        // 创建临时 UUID 用于克隆，克隆成功后再加入列表
+        let tempID = UUID()
+        let tempRepoURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("repositories")
+            .appendingPathComponent(tempID.uuidString)
 
         do {
             try await performGitOperation {
-                try self.cloneRepository(url: repoURL, branch: branch, token: token)
+                try self.cloneRepository(url: repoURL, branch: branch, token: token, targetURL: tempRepoURL)
             }
 
-            // 持久化仓库信息
-            self.repoURL = repoURL
-            self.branch = branch
+            // 克隆成功，创建并保存仓库信息
+            let displayName = self.getDisplayName(from: repoURL)
+            let newRepo = RepositoryInfo(id: tempID, name: displayName, url: repoURL, branch: branch, accountID: accountID)
+            
+            var list = repositories
+            list.append(newRepo)
+            repositories = list
+            
+            // 设为当前激活仓库
+            activeRepositoryID = tempID
 
             print("[GitSyncService] clone API successful")
             await updateState(.success)
@@ -123,6 +199,12 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
             await updateState(.error(error as? SyncError ?? .unknown(error.localizedDescription)))
             throw error
         }
+    }
+
+    private func getDisplayName(from urlString: String) -> String {
+        guard let url = URL(string: urlString) else { return urlString }
+        let name = url.lastPathComponent.replacingOccurrences(of: ".git", with: "")
+        return name.isEmpty ? urlString : name
     }
 
     /// 同步（fetch + reset）
@@ -155,7 +237,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         do {
             // 0. 前置校验：在本地 commit 之前，先检查当前 Token 是否有 Push (写入) 权限
             // 这样如果无权限，可以立刻报错，避免本地产生未同步的 commit
-            let token = KeychainService.shared.readToken() ?? ""
+            let token = activeRepository?.accountID != nil ? (KeychainService.shared.readToken(forAccountID: activeRepository?.accountID) ?? "") : ""
             try await checkPushPermission(repoURL: repoURL, token: token)
 
             try await performGitOperation {
@@ -224,11 +306,11 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         return fetchOpts
     }
 
-    private func cloneRepository(url: String, branch: String, token: String) throws {
+    private func cloneRepository(url: String, branch: String, token: String, targetURL: URL) throws {
         print("[GitSyncService] Start cloning repository: \(url), branch: \(branch)")
-        try? FileManager.default.removeItem(at: repoRootURL)
+        try? FileManager.default.removeItem(at: targetURL)
         try FileManager.default.createDirectory(
-            at: repoRootURL,
+            at: targetURL,
             withIntermediateDirectories: true
         )
 
@@ -244,7 +326,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         let result = gitClone(
             out: &repoPtr,
             url: authenticatedURL,
-            localPath: repoRootURL.path,
+            localPath: targetURL.path,
             options: cloneOpts
         )
 
@@ -279,7 +361,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         }
         defer { gitRemoteFree(remote: remote) }
 
-        let token = KeychainService.shared.readToken() ?? ""
+        let token = activeRepository?.accountID != nil ? (KeychainService.shared.readToken(forAccountID: activeRepository?.accountID) ?? "") : ""
         let fetchOpts = makeFetchOptions(token: token)
 
         let refspec = "refs/heads/\(branch):refs/remotes/origin/\(branch)"
@@ -668,7 +750,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         }
         defer { gitRemoteFree(remote: remote) }
 
-        let token = KeychainService.shared.readToken() ?? ""
+        let token = activeRepository?.accountID != nil ? (KeychainService.shared.readToken(forAccountID: activeRepository?.accountID) ?? "") : ""
         let pushOpts = makePushOptions(token: token)
 
         let refspec = "refs/heads/\(branch):refs/heads/\(branch)"

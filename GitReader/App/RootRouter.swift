@@ -9,7 +9,7 @@ struct RootRouter: View {
     var body: some View {
         Group {
             if hasConfiguredRepo {
-                FileListView(hasConfiguredRepo: $hasConfiguredRepo)
+                MainContainerView(hasConfiguredRepo: $hasConfiguredRepo)
             } else {
                 RepoConfigView(hasConfiguredRepo: $hasConfiguredRepo)
             }

@@ -1026,6 +1026,114 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
             "de": "Verbindung fehlgeschlagen, HTTP-Statuscode: %d",
             "fr": "Échec de la connexion, code d'état HTTP : %d",
             "ko": "연결 실패, HTTP 상태 코드: %d"
+        ],
+        "delete_repo": [
+            "en": "Delete Repository",
+            "zh-Hans": "删除仓库"
+        ],
+        "repo_info": [
+            "en": "Repository Information",
+            "zh-Hans": "仓库信息"
+        ],
+        "auth_account": [
+            "en": "Authentication Account",
+            "zh-Hans": "认证账号"
+        ],
+        "select_account": [
+            "en": "Select Account",
+            "zh-Hans": "选择账号"
+        ],
+        "public_repo_no_auth": [
+            "en": "Public Repository (No Auth)",
+            "zh-Hans": "公开仓库 (无需认证)"
+        ],
+        "add_new_account": [
+            "en": "Add New Account",
+            "zh-Hans": "添加新账号"
+        ],
+        "login_new_account": [
+            "en": "Login New Account",
+            "zh-Hans": "登录新账号"
+        ],
+        "platform": [
+            "en": "Platform",
+            "zh-Hans": "平台"
+        ],
+        "custom_client_id_optional": [
+            "en": "Custom Client ID (Optional)",
+            "zh-Hans": "自定义 Client ID (可选)"
+        ],
+        "device_flow_code_prompt": [
+            "en": "Please enter the following code on the authorization page:",
+            "zh-Hans": "请在授权页面中输入以下验证码："
+        ],
+        "copy_and_open_browser": [
+            "en": "Copy & Open Browser",
+            "zh-Hans": "复制并打开浏览器"
+        ],
+        "waiting_for_auth": [
+            "en": "Waiting for authorization...",
+            "zh-Hans": "正在等待授权..."
+        ],
+        "start_login": [
+            "en": "Start Login",
+            "zh-Hans": "开始登录"
+        ],
+        "add_repo_title": [
+            "en": "Add Repository",
+            "zh-Hans": "添加仓库"
+        ],
+        "cancel": [
+            "en": "Cancel",
+            "zh-Hans": "取消"
+        ],
+        "clone": [
+            "en": "Clone",
+            "zh-Hans": "克隆"
+        ],
+        "no_accounts_logged_in": [
+            "en": "No Accounts Logged In",
+            "zh-Hans": "未登录任何账号"
+        ],
+        "no_accounts_logged_in_desc": [
+            "en": "Log in to GitHub or GitLab to access your private repositories.",
+            "zh-Hans": "登录 GitHub 或 GitLab 账号以访问您的私有仓库。"
+        ],
+        "logged_in_accounts": [
+            "en": "Logged In Accounts",
+            "zh-Hans": "已登录账号"
+        ],
+        "logout": [
+            "en": "Log Out",
+            "zh-Hans": "退出登录"
+        ],
+        "account_management_title": [
+            "en": "Account Management",
+            "zh-Hans": "账号管理"
+        ],
+        "done": [
+            "en": "Done",
+            "zh-Hans": "完成"
+        ],
+        "select_note_to_read": [
+            "en": "Select a Note to Read",
+            "zh-Hans": "选择一篇笔记开始阅读"
+        ],
+        "select_note_to_read_desc": [
+            "en": "Choose a note from the file list on the left to display its content here.",
+            "zh-Hans": "从左侧文件列表中选择一篇笔记，其内容将在此处展示。"
+        ],
+        "device_flow_expired": [
+            "en": "Authorization code expired. Please try again.",
+            "zh-Hans": "授权码已过期，请重试。"
+        ],
+        "device_flow_access_denied": [
+            "en": "Access denied by user.",
+            "zh-Hans": "用户拒绝了授权。"
+        ],
+        "device_flow_invalid_response": [
+            "en": "Invalid response from server.",
+            "zh-Hans": "服务器返回了无效响应。"
         ]
     ]
 }
