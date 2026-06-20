@@ -36,11 +36,18 @@ final class FileScannerService: @unchecked Sendable {
     }
 
     /// 在文件树中根据笔记名查找文件 URL
-    /// - Parameter noteName: WikiLinks 中的目标笔记名（大小写不敏感）
+    /// - Parameter noteName: WikiLinks 中的目标笔记名（大小写不敏感，支持路径型 [[folder/note]]）
     /// - Returns: 匹配的 .md 文件 URL，未找到返回 nil
     func findNote(named noteName: String) -> URL? {
         let allFiles = getAllMarkdownFiles()
-        let lowercased = noteName.lowercased()
+        // 支持路径型 WikiLinks：[[folder/note]] → 取最后一段 "note"
+        let resolved = noteName
+            .components(separatedBy: "/")
+            .last?
+            .trimmingCharacters(in: .whitespaces)
+            ?? noteName
+        guard !resolved.isEmpty else { return nil }
+        let lowercased = resolved.lowercased()
 
         return allFiles.first { file in
             let filename = file.deletingPathExtension().lastPathComponent

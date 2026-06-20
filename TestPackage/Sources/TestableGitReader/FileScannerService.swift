@@ -28,6 +28,16 @@ final class FileScannerService {
         return scanDirectory(at: repoRoot, depth: 0)
     }
 
+    /// 测试注入：扫描指定根目录
+    /// - Parameter rootURL: 仓库根目录 URL
+    /// - Returns: 文件夹节点列表
+    func scanDirectory(at rootURL: URL) -> [FolderNode] {
+        guard fileManager.fileExists(atPath: rootURL.path) else {
+            return []
+        }
+        return scanDirectory(at: rootURL, depth: 0)
+    }
+
     /// 获取所有 .md 文件的完整路径列表（扁平化）
     func getAllMarkdownFiles() -> [URL] {
         var files: [URL] = []
@@ -35,12 +45,37 @@ final class FileScannerService {
         return files
     }
 
+    /// 测试注入：获取指定根目录下所有 .md 文件
+    /// - Parameter rootURL: 仓库根目录 URL
+    /// - Returns: 扁平化的 .md 文件 URL 列表
+    func getAllMarkdownFiles(at rootURL: URL) -> [URL] {
+        var files: [URL] = []
+        collectMarkdownFiles(at: rootURL, into: &files)
+        return files
+    }
+
     /// 在文件树中根据笔记名查找文件 URL
-    /// - Parameter noteName: WikiLinks 中的目标笔记名（大小写不敏感）
+    /// - Parameter noteName: WikiLinks 中的目标笔记名（大小写不敏感，支持路径型 [[folder/note]]）
     /// - Returns: 匹配的 .md 文件 URL，未找到返回 nil
     func findNote(named noteName: String) -> URL? {
-        let allFiles = getAllMarkdownFiles()
-        let lowercased = noteName.lowercased()
+        return findNote(named: noteName, in: repoRoot)
+    }
+
+    /// 测试注入：在指定根目录下查找笔记
+    /// - Parameters:
+    ///   - noteName: WikiLinks 目标笔记名（支持 `[[folder/note]]` 路径型，取最后一段匹配）
+    ///   - rootURL: 仓库根目录 URL
+    /// - Returns: 匹配的 .md 文件 URL，未找到返回 nil
+    func findNote(named noteName: String, in rootURL: URL) -> URL? {
+        let allFiles = getAllMarkdownFiles(at: rootURL)
+        // 支持路径型 WikiLinks：[[folder/note]] → 取最后一段 "note"
+        let resolved = noteName
+            .components(separatedBy: "/")
+            .last?
+            .trimmingCharacters(in: .whitespaces)
+            ?? noteName
+        guard !resolved.isEmpty else { return nil }
+        let lowercased = resolved.lowercased()
 
         return allFiles.first { file in
             let filename = file.deletingPathExtension().lastPathComponent

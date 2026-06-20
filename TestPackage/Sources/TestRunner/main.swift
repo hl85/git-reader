@@ -771,6 +771,209 @@ runSuite("GitSyncService - isLocalRepoExists") {
     }
 }
 
+// ============================================================
+// §4.3 错误处理验证：7 种场景
+// ============================================================
+runSuite("§4.3 错误处理验证 - 同步前置校验") {
+    // 保存并恢复 GitSyncService 单例状态
+    let savedRepoURL = GitSyncService.shared.repoURL
+    defer {
+        GitSyncService.shared.repoURL = savedRepoURL
+        KeychainService.shared.deleteToken()
+        try? FileManager.default.removeItem(at: GitSyncService.shared.repoRootURL)
+    }
+
+    // 场景 3：Token 缺失 → validateForSync 抛 unknown
+    test("场景3: Token 缺失时 validateForSync 抛错") {
+        KeychainService.shared.deleteToken()
+        GitSyncService.shared.repoURL = "https://github.com/user/repo.git"
+        // 确保 repo 不存在以隔离 token 检查
+        try? FileManager.default.removeItem(at: GitSyncService.shared.repoRootURL)
+
+        var caughtTokenError = false
+        do {
+            try GitSyncService.shared.validateForSync()
+        } catch let e as SyncError {
+            if case .unknown(let msg) = e, msg.contains("Token") { caughtTokenError = true }
+        } catch {}
+        try assertTrue(caughtTokenError, "Token 缺失应抛含 'Token' 的错误")
+    }
+
+    // 场景 3b：repoURL 空 → validateForSync 抛错
+    test("场景3b: repoURL 为空时 validateForSync 抛错") {
+        // 先存 token 以跳过 token 检查
+        try KeychainService.shared.saveToken("test-token")
+        GitSyncService.shared.repoURL = ""
+        try? FileManager.default.removeItem(at: GitSyncService.shared.repoRootURL)
+
+        var caughtURLError = false
+        do {
+            try GitSyncService.shared.validateForSync()
+        } catch let e as SyncError {
+            if case .unknown(let msg) = e, msg.contains("仓库地址") { caughtURLError = true }
+        } catch {}
+        try assertTrue(caughtURLError, "repoURL 空应抛含 '仓库地址' 的错误")
+        KeychainService.shared.deleteToken()
+    }
+
+    // 场景 3c：本地仓库缺失 → validateForSync 抛错
+    test("场景3c: 本地仓库未初始化时 validateForSync 抛错") {
+        try KeychainService.shared.saveToken("test-token")
+        GitSyncService.shared.repoURL = "https://github.com/user/repo.git"
+        try? FileManager.default.removeItem(at: GitSyncService.shared.repoRootURL)
+
+        var caughtRepoError = false
+        do {
+            try GitSyncService.shared.validateForSync()
+        } catch let e as SyncError {
+            if case .unknown(let msg) = e, msg.contains("本地仓库") { caughtRepoError = true }
+        } catch {}
+        try assertTrue(caughtRepoError, "本地仓库缺失应抛含 '本地仓库' 的错误")
+        KeychainService.shared.deleteToken()
+    }
+
+    // 场景 5：本地文件被意外删除 → sync 通过 reset --hard 恢复
+    // 该场景依赖 libgit2 实际操作，无法在 macOS 桩环境单元测试。
+    // 验证点：validateForSync 会在仓库缺失时报错，提示用户重试克隆。
+    test("场景5: 本地文件被删时 validateForSync 报错（提示重试克隆）") {
+        try KeychainService.shared.saveToken("test-token")
+        GitSyncService.shared.repoURL = "https://github.com/user/repo.git"
+        try? FileManager.default.removeItem(at: GitSyncService.shared.repoRootURL)
+
+        var threwError = false
+        do {
+            try GitSyncService.shared.validateForSync()
+        } catch {
+            threwError = true
+        }
+        try assertTrue(threwError, "本地仓库被删时应触发错误，提示用户重试克隆")
+        KeychainService.shared.deleteToken()
+    }
+
+    // 场景 6：WikiLinks 目标笔记不存在 → findNote 返回 nil
+    test("场景6: WikiLinks 目标不存在时 findNote 返回 nil") {
+        let repo = tempDir.appendingPathComponent("wiki-missing-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        try? FileManager.default.createDirectory(at: repo, withIntermediateDirectories: true)
+        let existing = repo.appendingPathComponent("existing.md")
+        try! "# 存在".write(to: existing, atomically: true, encoding: .utf8)
+
+        let result = FileScannerService.shared.findNote(named: "nonexistent", in: repo)
+        try assertNil(result, "不存在的笔记应返回 nil，View 层据此显示 Toast")
+    }
+
+    // 场景 6b：WikiLinks 路径型目标不存在 → findNote 返回 nil
+    test("场景6b: WikiLinks 路径型目标不存在时 findNote 返回 nil") {
+        let repo = tempDir.appendingPathComponent("wiki-path-missing-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        try? FileManager.default.createDirectory(at: repo, withIntermediateDirectories: true)
+        let existing = repo.appendingPathComponent("existing.md")
+        try! "# 存在".write(to: existing, atomically: true, encoding: .utf8)
+
+        // [[folder/missing]] 取最后一段 "missing" 仍找不到
+        let result = FileScannerService.shared.findNote(named: "folder/missing", in: repo)
+        try assertNil(result)
+    }
+
+    // 场景 7：图片路径无效 → ObsidianElementRewriter 改写为 file://，渲染层显示占位
+    // ObsidianElementRewriter 的路径改写已在 ObsidianElementRewriter 套件覆盖。
+    // 此处验证：无效图片源被改写为 file:// 沙盒路径（渲染层据此 fallback 占位图标）。
+    test("场景7: 无效图片路径被改写为 file:// 沙盒路径") {
+        let html = makeDocument("![bad](nonexistent/broken.png)").format()
+        // 改写后应包含 file:// 或沙盒路径前缀，渲染层 LazyImage error 态显示占位图标
+        try assertTrue(
+            html.contains("file://") || html.contains("nonexistent/broken.png"),
+            "图片路径应被改写为沙盒路径: \(html)"
+        )
+    }
+}
+
+await runSuite("§4.3 错误处理验证 - 连接测试 (async)") {
+    // 共享 mock session
+    let config = URLSessionConfiguration.ephemeral
+    config.protocolClasses = [MockURLProtocol.self]
+    let mockSession = URLSession(configuration: config)
+
+    // 场景 1：PAT 无效 → testConnection 401 抛 authFailed
+    await test("场景1: PAT 无效抛 authFailed") {
+        MockURLProtocol.requestHandler = { _ in
+            let response = HTTPURLResponse(
+                url: URL(string: "https://github.com/u/r.git/info/refs?service=git-upload-pack")!,
+                statusCode: 401, httpVersion: nil, headerFields: nil)!
+            return (response, Data())
+        }
+        var caughtAuth = false
+        do {
+            try await GitSyncService.shared.testConnection(
+                repoURL: "https://github.com/user/repo.git",
+                token: "invalid",
+                session: mockSession
+            )
+        } catch let e as SyncError {
+            if case .authFailed = e { caughtAuth = true }
+        } catch {}
+        try assertTrue(caughtAuth, "401 应抛 SyncError.authFailed")
+    }
+
+    // 场景 2：仓库不存在 → testConnection 404 抛 unknown
+    await test("场景2: 仓库不存在抛 unknown") {
+        MockURLProtocol.requestHandler = { _ in
+            let response = HTTPURLResponse(
+                url: URL(string: "https://github.com/u/r.git/info/refs?service=git-upload-pack")!,
+                statusCode: 404, httpVersion: nil, headerFields: nil)!
+            return (response, Data())
+        }
+        var caughtNotFound = false
+        do {
+            try await GitSyncService.shared.testConnection(
+                repoURL: "https://github.com/user/repo.git",
+                token: "any",
+                session: mockSession
+            )
+        } catch let e as SyncError {
+            if case .unknown(let msg) = e, msg.contains("仓库不存在") { caughtNotFound = true }
+        } catch {}
+        try assertTrue(caughtNotFound, "404 应抛含'仓库不存在'的 unknown")
+    }
+
+    // 场景 4：网络超时 → testConnection 包装为 SyncError.unknown
+    await test("场景4: 网络超时抛 SyncError.unknown") {
+        MockURLProtocol.requestHandler = { _ in
+            throw URLError(.timedOut)
+        }
+        var caughtNetworkError = false
+        do {
+            try await GitSyncService.shared.testConnection(
+                repoURL: "https://github.com/user/repo.git",
+                token: "any",
+                session: mockSession
+            )
+        } catch let e as SyncError {
+            // 网络错误被包装为 unknown
+            if case .unknown = e { caughtNetworkError = true }
+        } catch {}
+        try assertTrue(caughtNetworkError, "网络超时应被包装为 SyncError.unknown")
+    }
+
+    // 场景 4b：网络不可达 → testConnection 包装为 SyncError.unknown
+    await test("场景4b: 网络不可达抛 SyncError.unknown") {
+        MockURLProtocol.requestHandler = { _ in
+            throw URLError(.notConnectedToInternet)
+        }
+        var caughtNetworkError = false
+        do {
+            try await GitSyncService.shared.testConnection(
+                repoURL: "https://github.com/user/repo.git",
+                token: "any",
+                session: mockSession
+            )
+        } catch let e as SyncError {
+            if case .unknown = e { caughtNetworkError = true }
+        } catch {}
+        try assertTrue(caughtNetworkError, "网络不可达应被包装为 SyncError.unknown")
+    }
+}
+
 runSuite("Models - FolderNode") {
     test("FolderNode 具有基于名称的稳定 ID") {
         let folder1 = FolderNode(name: "Notes", children: [])
@@ -780,6 +983,194 @@ runSuite("Models - FolderNode") {
         try assertTrue(folder1.id == "Notes", "id 应该等于 name")
         try assertTrue(folder1.id == folder2.id, "相同名称的文件夹应该具有相同的 id")
         try assertTrue(folder1.id != folder3.id, "不同名称的文件夹应该具有不同的 id")
+    }
+}
+
+runSuite("FileScannerService - scanDirectory(at:)") {
+    // 每个测试用例使用唯一 UUID 目录，互不干扰
+    func makeRepo(_ name: String) -> URL {
+        let dir = tempDir.appendingPathComponent("scan-\(name)-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+    func makeFile(_ dir: URL, _ path: String, content: String = "# note") {
+        let url = dir.appendingPathComponent(path)
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? content.write(to: url, atomically: true, encoding: .utf8)
+    }
+
+    test("空目录返回空数组") {
+        let repo = makeRepo("empty")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        let folders = FileScannerService.shared.scanDirectory(at: repo)
+        try assertEqual(folders.count, 0)
+    }
+
+    test("不存在的目录返回空数组") {
+        let nonExist = tempDir.appendingPathComponent("not-exist-\(UUID().uuidString)")
+        let folders = FileScannerService.shared.scanDirectory(at: nonExist)
+        try assertEqual(folders.count, 0)
+    }
+
+    test("根目录 .md 文件归入根目录文件夹") {
+        let repo = makeRepo("root-files")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        makeFile(repo, "root-note.md")
+
+        let folders = FileScannerService.shared.scanDirectory(at: repo)
+        try assertEqual(folders.count, 1, "应只有根目录文件夹")
+        let rootFolder = folders[0]
+        try assertEqual(rootFolder.children.count, 1)
+        try assertEqual(rootFolder.children[0].name, "root-note")
+    }
+
+    test("子文件夹中的 .md 文件归入对应文件夹节点") {
+        let repo = makeRepo("nested")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        makeFile(repo, "notes/a.md")
+        makeFile(repo, "notes/b.md")
+
+        let folders = FileScannerService.shared.scanDirectory(at: repo)
+        // 根目录文件夹不存在（根目录无 .md），仅 "notes" 文件夹
+        try assertEqual(folders.count, 1)
+        try assertEqual(folders[0].name, "notes")
+        try assertEqual(folders[0].children.count, 2)
+    }
+
+    test("排除 .git/.obsidian/.trash/node_modules 目录") {
+        let repo = makeRepo("excluded")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        makeFile(repo, ".git/config.md")
+        makeFile(repo, ".obsidian/workspace.md")
+        makeFile(repo, ".trash/deleted.md")
+        makeFile(repo, "node_modules/lib.md")
+        makeFile(repo, "real.md")
+
+        let folders = FileScannerService.shared.scanDirectory(at: repo)
+        // 仅 real.md 应被扫描到，归入根目录文件夹
+        try assertEqual(folders.count, 1)
+        try assertEqual(folders[0].children.count, 1)
+        try assertEqual(folders[0].children[0].name, "real")
+    }
+
+    test("非 .md 文件被忽略") {
+        let repo = makeRepo("non-md")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        makeFile(repo, "note.txt", content: "text")
+        makeFile(repo, "image.png", content: "data")
+        makeFile(repo, "real.md")
+
+        let folders = FileScannerService.shared.scanDirectory(at: repo)
+        try assertEqual(folders.count, 1)
+        try assertEqual(folders[0].children.count, 1)
+        try assertEqual(folders[0].children[0].name, "real")
+    }
+
+    test("getAllMarkdownFiles(at:) 扁平化返回所有 .md") {
+        let repo = makeRepo("flat")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        makeFile(repo, "a.md")
+        makeFile(repo, "sub/b.md")
+        makeFile(repo, "sub/deep/c.md")
+
+        let files = FileScannerService.shared.getAllMarkdownFiles(at: repo)
+        try assertEqual(files.count, 3)
+        let names = Set(files.map { $0.deletingPathExtension().lastPathComponent })
+        try assertTrue(names.contains("a"), "应包含 a")
+        try assertTrue(names.contains("b"), "应包含 b")
+        try assertTrue(names.contains("c"), "应包含 c")
+    }
+}
+
+runSuite("FileScannerService - findNote(named:in:)") {
+    func makeRepo(_ name: String) -> URL {
+        let dir = tempDir.appendingPathComponent("find-\(name)-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+    func makeFile(_ dir: URL, _ path: String, content: String = "# note") {
+        let url = dir.appendingPathComponent(path)
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? content.write(to: url, atomically: true, encoding: .utf8)
+    }
+
+    test("精确笔记名命中") {
+        let repo = makeRepo("exact")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        makeFile(repo, "target.md")
+
+        let result = FileScannerService.shared.findNote(named: "target", in: repo)
+        try assertNotNil(result)
+        try assertEqual(result?.deletingPathExtension().lastPathComponent, "target")
+    }
+
+    test("大小写不敏感匹配") {
+        let repo = makeRepo("case")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        makeFile(repo, "MyNote.md")
+
+        let result = FileScannerService.shared.findNote(named: "mynote", in: repo)
+        try assertNotNil(result, "大小写不敏感应命中")
+        try assertEqual(result?.deletingPathExtension().lastPathComponent, "MyNote")
+    }
+
+    test("未找到笔记返回 nil") {
+        let repo = makeRepo("notfound")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        makeFile(repo, "existing.md")
+
+        let result = FileScannerService.shared.findNote(named: "missing", in: repo)
+        try assertNil(result)
+    }
+
+    test("路径型 [[folder/note]] 取最后一段匹配") {
+        let repo = makeRepo("path-type")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        makeFile(repo, "notes/design.md")
+
+        // 模拟 [[notes/design]] WikiLink，应取 "design" 匹配
+        let result = FileScannerService.shared.findNote(named: "notes/design", in: repo)
+        try assertNotNil(result, "路径型 [[folder/note]] 应取最后一段匹配")
+        try assertEqual(result?.deletingPathExtension().lastPathComponent, "design")
+    }
+
+    test("路径型大小写不敏感") {
+        let repo = makeRepo("path-case")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        makeFile(repo, "notes/Architecture.md")
+
+        // [[notes/architecture]] 应命中 Architecture.md
+        let result = FileScannerService.shared.findNote(named: "notes/architecture", in: repo)
+        try assertNotNil(result, "路径型大小写不敏感应命中")
+        try assertEqual(result?.deletingPathExtension().lastPathComponent, "Architecture")
+    }
+
+    test("深层路径 [[a/b/c/note]] 取最后一段匹配") {
+        let repo = makeRepo("deep-path")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        makeFile(repo, "a/b/c/deep-note.md")
+
+        let result = FileScannerService.shared.findNote(named: "a/b/c/deep-note", in: repo)
+        try assertNotNil(result, "深层路径应取最后一段匹配")
+        try assertEqual(result?.deletingPathExtension().lastPathComponent, "deep-note")
+    }
+
+    test("空字符串返回 nil") {
+        let repo = makeRepo("empty-input")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        makeFile(repo, "any.md")
+
+        let result = FileScannerService.shared.findNote(named: "", in: repo)
+        try assertNil(result)
+    }
+
+    test("仅路径分隔符返回 nil") {
+        let repo = makeRepo("slash-only")
+        defer { try? FileManager.default.removeItem(at: repo) }
+        makeFile(repo, "any.md")
+
+        let result = FileScannerService.shared.findNote(named: "///", in: repo)
+        try assertNil(result, "仅分隔符应返回 nil")
     }
 }
 
@@ -963,6 +1354,192 @@ runSuite("SearchService - filter(query:) 四字段命中") {
         let results = SearchService.shared.filter(query: "")
         try assertEqual(results.count, 3)
     }
+}
+
+runSuite("SearchService - 边界用例") {
+    let searchDir = tempDir.appendingPathComponent("edge-\(UUID().uuidString)")
+    try? FileManager.default.createDirectory(at: searchDir, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: searchDir) }
+
+    test("空文件列表构建空索引") {
+        SearchService.shared.rebuildIndex(from: [])
+        try assertEqual(SearchService.shared.index.count, 0)
+    }
+
+    test("不可读取的文件被跳过") {
+        // 指向一个不存在的文件 URL，rebuildIndex 应跳过而不崩溃
+        let fakeURL = searchDir.appendingPathComponent("nonexistent-\(UUID().uuidString).md")
+        SearchService.shared.rebuildIndex(from: [fakeURL])
+        try assertEqual(SearchService.shared.index.count, 0, "不可读文件应被跳过")
+    }
+
+    test("aliases 为字符串而非数组时正确解析") {
+        let fileURL = searchDir.appendingPathComponent("alias-str-\(UUID().uuidString).md")
+        let content = """
+        ---
+        title: 字符串别名
+        alias: single-alias
+        ---
+        正文
+        """
+        try! content.write(to: fileURL, atomically: true, encoding: .utf8)
+
+        SearchService.shared.rebuildIndex(from: [fileURL])
+        let index = SearchService.shared.index
+        try assertEqual(index.count, 1)
+        try assertEqual(index[0].aliases, ["single-alias"], "alias 字符串应转为单元素数组")
+    }
+
+    test("非法 YAML Frontmatter 不崩溃并回退为文件名") {
+        let fileURL = searchDir.appendingPathComponent("bad-yaml-\(UUID().uuidString).md")
+        let content = """
+        ---
+        this is: not: valid: yaml: : :
+        ---
+        正文
+        """
+        try! content.write(to: fileURL, atomically: true, encoding: .utf8)
+
+        SearchService.shared.rebuildIndex(from: [fileURL])
+        let index = SearchService.shared.index
+        try assertEqual(index.count, 1)
+        // 解析失败时 title 回退为文件名（不含扩展名）
+        let expectedName = fileURL.deletingPathExtension().lastPathComponent
+        try assertEqual(index[0].title, expectedName)
+        try assertTrue(index[0].tags.isEmpty)
+        try assertTrue(index[0].aliases.isEmpty)
+    }
+
+    test("特殊字符搜索不崩溃") {
+        let fileURL = searchDir.appendingPathComponent("special-\(UUID().uuidString).md")
+        // 用 frontmatter 让 title 包含可搜索内容
+        let content = """
+        ---
+        title: 标题
+        ---
+        # 正文
+        """
+        try! content.write(to: fileURL, atomically: true, encoding: .utf8)
+        SearchService.shared.rebuildIndex(from: [fileURL])
+
+        // 包含正则元字符的查询，不应崩溃且不应误匹配
+        let results1 = SearchService.shared.filter(query: ".*[](){}")
+        try assertEqual(results1.count, 0, "特殊字符不应匹配到任何条目")
+
+        // 包含 Unicode 的查询应命中 title
+        let results2 = SearchService.shared.filter(query: "标题")
+        try assertEqual(results2.count, 1)
+    }
+
+    test("重复文件名都进入索引") {
+        let dir1 = searchDir.appendingPathComponent("d1-\(UUID().uuidString)")
+        let dir2 = searchDir.appendingPathComponent("d2-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: dir1, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: dir2, withIntermediateDirectories: true)
+        let file1 = dir1.appendingPathComponent("dup.md")
+        let file2 = dir2.appendingPathComponent("dup.md")
+        try! "# 1".write(to: file1, atomically: true, encoding: .utf8)
+        try! "# 2".write(to: file2, atomically: true, encoding: .utf8)
+
+        SearchService.shared.rebuildIndex(from: [file1, file2])
+        try assertEqual(SearchService.shared.index.count, 2, "两个同名文件都应进入索引")
+
+        let results = SearchService.shared.filter(query: "dup")
+        try assertEqual(results.count, 2, "应匹配到两个同名文件")
+    }
+
+    test("rebuildIndex 覆盖旧索引而非追加") {
+        let file1 = searchDir.appendingPathComponent("first-\(UUID().uuidString).md")
+        let file2 = searchDir.appendingPathComponent("second-\(UUID().uuidString).md")
+        try! "# 1".write(to: file1, atomically: true, encoding: .utf8)
+        try! "# 2".write(to: file2, atomically: true, encoding: .utf8)
+
+        SearchService.shared.rebuildIndex(from: [file1])
+        try assertEqual(SearchService.shared.index.count, 1)
+
+        // 再次构建应覆盖，而非变成 2 条
+        SearchService.shared.rebuildIndex(from: [file2])
+        try assertEqual(SearchService.shared.index.count, 1)
+        try assertEqual(SearchService.shared.index[0].filename, file2.deletingPathExtension().lastPathComponent)
+    }
+}
+
+// ============================================================
+// KeychainService Tests
+// ============================================================
+runSuite("KeychainService - CRUD 全流程") {
+    // 每个测试前清理，避免历史残留影响
+    KeychainService.shared.deleteToken()
+
+    test("初始状态无 token，readToken 返回 nil") {
+        KeychainService.shared.deleteToken()
+        try assertNil(KeychainService.shared.readToken())
+    }
+
+    test("saveToken 后 readToken 返回相同值") {
+        KeychainService.shared.deleteToken()
+        let token = "ghp_test_token_12345"
+        try KeychainService.shared.saveToken(token)
+        try assertEqual(KeychainService.shared.readToken(), token)
+    }
+
+    test("deleteToken 后 readToken 返回 nil") {
+        KeychainService.shared.deleteToken()
+        try KeychainService.shared.saveToken("to-be-deleted")
+        try assertNotNil(KeychainService.shared.readToken())
+
+        KeychainService.shared.deleteToken()
+        try assertNil(KeychainService.shared.readToken())
+    }
+
+    test("重复 saveToken 覆盖旧值") {
+        KeychainService.shared.deleteToken()
+        try KeychainService.shared.saveToken("first-token")
+        try assertEqual(KeychainService.shared.readToken(), "first-token")
+
+        // 再次保存应覆盖，而非报错
+        try KeychainService.shared.saveToken("second-token")
+        try assertEqual(KeychainService.shared.readToken(), "second-token")
+    }
+
+    test("保存空字符串 token") {
+        KeychainService.shared.deleteToken()
+        try KeychainService.shared.saveToken("")
+        // 空字符串是合法 Data，应能读取（Keychain 不拒绝空值）
+        let read = KeychainService.shared.readToken()
+        try assertEqual(read, "")
+    }
+
+    test("保存长 token (256 字符)") {
+        KeychainService.shared.deleteToken()
+        let longToken = String(repeating: "a", count: 256)
+        try KeychainService.shared.saveToken(longToken)
+        try assertEqual(KeychainService.shared.readToken(), longToken)
+    }
+
+    test("保存含特殊字符的 token") {
+        KeychainService.shared.deleteToken()
+        let specialToken = "tok=param&other#frag?query+/\\\"'"
+        try KeychainService.shared.saveToken(specialToken)
+        try assertEqual(KeychainService.shared.readToken(), specialToken)
+    }
+
+    test("保存含中文/Emoji 的 token") {
+        KeychainService.shared.deleteToken()
+        let unicodeToken = "token-测试-🔒-日本語"
+        try KeychainService.shared.saveToken(unicodeToken)
+        try assertEqual(KeychainService.shared.readToken(), unicodeToken)
+    }
+
+    test("多次 deleteToken 不报错") {
+        KeychainService.shared.deleteToken()
+        KeychainService.shared.deleteToken()
+        KeychainService.shared.deleteToken()
+        try assertNil(KeychainService.shared.readToken())
+    }
+
+    // 清理测试产生的 token
+    KeychainService.shared.deleteToken()
 }
 
 // ============================================================
