@@ -902,6 +902,26 @@ runSuite("SearchService - rebuildIndex(from:)") {
         try assertEqual(index.count, 1)
         try assertEqual(index[0].tags, ["important"])
     }
+
+    test("Frontmatter 开头有空行或空格时容错解析") {
+        let fileURL = searchDir.appendingPathComponent("fault_tolerant.md")
+        let content = """
+        
+          
+        ---
+        title: 容错标题
+        tags: [tolerant]
+        ---
+        正文
+        """
+        try! content.write(to: fileURL, atomically: true, encoding: .utf8)
+
+        SearchService.shared.rebuildIndex(from: [fileURL])
+        let index = SearchService.shared.index
+        try assertEqual(index.count, 1)
+        try assertEqual(index[0].title, "容错标题")
+        try assertEqual(index[0].tags, ["tolerant"])
+    }
 }
 
 runSuite("SearchService - filter(query:) 四字段命中") {

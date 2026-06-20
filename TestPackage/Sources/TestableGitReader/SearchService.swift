@@ -65,12 +65,18 @@ final class SearchService: ObservableObject {
 
     /// 快速解析 Frontmatter YAML（无完整 YAML 解析器开销）
     private func parseFrontmatter(from content: String) -> [String: Any] {
-        // 提取 --- 包围的 YAML 块
-        guard content.hasPrefix("---") else {
+        // 1. 高性能容错：仅提取前 50 个字符进行空白字符裁剪和前缀检查
+        let prefix = content.prefix(50).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard prefix.hasPrefix("---") else {
             return [:]
         }
 
-        let rest = content.dropFirst(3)
+        // 2. 找到真正的 Frontmatter 起始位置
+        guard let startRange = content.range(of: "---") else {
+            return [:]
+        }
+
+        let rest = content[startRange.upperBound...]
         guard let endRange = rest.range(of: "\n---") else {
             return [:]
         }
