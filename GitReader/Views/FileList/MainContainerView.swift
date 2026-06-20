@@ -64,8 +64,9 @@ struct MainContainerView: View {
                         )
                         .frame(width: 80)
                         .background(ClaudeColors.cardBackground)
+                        .contentShape(Rectangle())
                         .transition(.move(edge: .leading))
-                        .ignoresSafeArea(edges: .vertical)
+                        .ignoresSafeArea(edges: .bottom)
                         .zIndex(1)
                     }
                 }

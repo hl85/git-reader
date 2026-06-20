@@ -10,33 +10,117 @@ struct SettingsView: View {
     @State private var showToast = false
     @State private var toastMessage = ""
     @State private var isSyncing = false
+    @State private var showAccountManagement = false
+    @State private var showAddRepo = false
 
-    let repoURL: String
-    let branch: String
+    @ObservedObject private var syncService = GitSyncService.shared
 
     var body: some View {
         List {
-            // 仓库信息
+            // 账号管理
             Section {
-                SettingsRow(
-                    icon: "link",
-                    label: "repo_address".localized,
-                    value: repoURL
-                )
-
-                SettingsRow(
-                    icon: "key.horizontal",
-                    label: "pat_token".localized,
-                    value: maskToken(KeychainService.shared.readToken() ?? "")
-                )
-
-                SettingsRow(
-                    icon: "leaf",
-                    label: "branch".localized,
-                    value: branch
-                )
+                Button(action: { showAccountManagement = true }) {
+                    HStack {
+                        Image(systemName: "person.badge.key")
+                            .font(.system(size: 16))
+                            .foregroundStyle(ClaudeColors.textSecondary)
+                            .frame(width: 22)
+                        
+                        Text("account_management_title".localized)
+                            .font(ClaudeTypography.bodyFont)
+                            .foregroundStyle(ClaudeColors.text)
+                        
+                        Spacer()
+                        
+                        Text("\(AccountManager.shared.accounts.count) \("accounts_count".localized)")
+                            .font(ClaudeTypography.captionFont)
+                            .foregroundStyle(ClaudeColors.textMuted)
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12))
+                            .foregroundStyle(ClaudeColors.textMuted)
+                    }
+                    .padding(.vertical, 4)
+                }
+                .buttonStyle(.plain)
             } header: {
-                sectionHeader("repo_info".localized)
+                sectionHeader("auth_account".localized)
+            }
+
+            // 所有仓库管理
+            Section {
+                ForEach(syncService.repositories) { repo in
+                    let isSelected = repo.id == syncService.activeRepositoryID
+                    
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(repo.name)
+                                .font(ClaudeTypography.bodyFont.weight(isSelected ? .semibold : .regular))
+                                .foregroundStyle(isSelected ? ClaudeColors.accent : ClaudeColors.text)
+                            
+                            Text("\(repo.url) (\(repo.branch))")
+                                .font(ClaudeTypography.captionFont)
+                                .foregroundStyle(ClaudeColors.textSecondary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        }
+                        
+                        Spacer()
+                        
+                        if isSelected {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(ClaudeColors.accent)
+                        } else {
+                            Button(action: {
+                                withAnimation {
+                                    syncService.setActiveRepository(repo.id)
+                                }
+                            }) {
+                                Text("switch".localized)
+                                    .font(.subheadline)
+                                    .foregroundStyle(ClaudeColors.link)
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .onDelete { indexSet in
+                     let repos = syncService.repositories
+                     for index in indexSet {
+                         let repo = repos[index]
+                         if repo.id == syncService.activeRepositoryID {
+                             syncService.reset()
+                         } else {
+                             var list = syncService.repositories
+                             list.remove(at: index)
+                             syncService.setRepositories(list)
+                             let base = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                                 .appendingPathComponent("repositories")
+                                 .appendingPathComponent(repo.id.uuidString)
+                             try? FileManager.default.removeItem(at: base)
+                         }
+                     }
+                 }
+                 
+                 // 添加仓库按钮
+                 Button(action: { showAddRepo = true }) {
+                     HStack(spacing: 12) {
+                         Image(systemName: "plus.circle")
+                             .font(.system(size: 16))
+                             .foregroundStyle(ClaudeColors.accent)
+                             .frame(width: 22)
+                         
+                         Text("add_repo_title".localized)
+                             .font(ClaudeTypography.bodyFont)
+                             .foregroundStyle(ClaudeColors.accent)
+                     }
+                     .padding(.vertical, 4)
+                 }
+                 .buttonStyle(.plain)
+            } header: {
+                sectionHeader("all_repos".localized)
             }
 
             // 同步
@@ -114,7 +198,7 @@ struct SettingsView: View {
                 SettingsRow(
                     icon: "book.closed",
                     label: "git_reader".localized,
-                    value: "v0.1.0 MVP"
+                    value: appVersionString
                 )
 
                 Button(role: .destructive, action: { showDisconnectAlert = true }) {
@@ -145,6 +229,12 @@ struct SettingsView: View {
         .overlay(alignment: .bottom) {
             ToastView(message: toastMessage, isPresented: $showToast)
         }
+        .sheet(isPresented: $showAccountManagement) {
+             AccountManagementView()
+         }
+         .sheet(isPresented: $showAddRepo) {
+             AddRepositoryView()
+         }
     }
 
     // MARK: - Actions
@@ -184,6 +274,12 @@ struct SettingsView: View {
     }
 
     // MARK: - Helpers
+
+    private var appVersionString: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        return "v\(version) (\(build))"
+    }
 
     private func sectionHeader(_ text: String) -> some View {
         Text(text.uppercased())
@@ -232,9 +328,7 @@ struct SettingsRow: View {
 #Preview {
     NavigationStack {
         SettingsView(
-            hasConfiguredRepo: .constant(true),
-            repoURL: "github.com/user/my-second-brain",
-            branch: "main"
+            hasConfiguredRepo: .constant(true)
         )
     }
 }

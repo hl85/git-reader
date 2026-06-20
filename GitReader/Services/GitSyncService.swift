@@ -6,35 +6,34 @@ import SwiftLibgit2
 final class GitSyncService: ObservableObject, @unchecked Sendable {
     @Published var syncState: SyncState = .idle
 
+    /// 侧边栏当前选中的账号 ID（用于过滤仓库列表，以及作为添加仓库时的默认账号）
+    /// nil 表示“全部”
+    @Published var selectedSidebarAccountID: UUID? = nil
+
+    /// 所有已配置的仓库列表（内存缓存 + UserDefaults 持久化）
+    /// 通过 `setRepositories(_:)` 修改，确保 @Published 触发视图刷新
+    @Published private(set) var repositories: [RepositoryInfo] = []
+
+    /// 当前激活的仓库 ID（内存缓存 + UserDefaults 持久化）
+    /// 通过 `setActiveRepository(_:)` 修改，确保 @Published 触发视图刷新
+    @Published private(set) var activeRepositoryID: UUID? = nil
+
     static let shared = GitSyncService()
 
-    /// 所有已配置的仓库列表（持久化到 UserDefaults）
-    var repositories: [RepositoryInfo] {
-        get {
-            guard let data = UserDefaults.standard.data(forKey: "repositories"),
-                  let list = try? JSONDecoder().decode([RepositoryInfo].self, from: data) else {
-                return []
-            }
-            return list
-        }
-        set {
-            if let data = try? JSONEncoder().encode(newValue) {
-                UserDefaults.standard.set(data, forKey: "repositories")
-            }
+    /// 更新仓库列表并持久化
+    func setRepositories(_ list: [RepositoryInfo]) {
+        repositories = list
+        if let data = try? JSONEncoder().encode(list) {
+            UserDefaults.standard.set(data, forKey: "repositories")
         }
     }
 
-    /// 当前激活的仓库 ID（持久化到 UserDefaults）
-    var activeRepositoryID: UUID? {
-        get {
-            guard let str = UserDefaults.standard.string(forKey: "activeRepositoryID") else { return nil }
-            return UUID(uuidString: str)
-        }
-        set {
-            UserDefaults.standard.set(newValue?.uuidString, forKey: "activeRepositoryID")
-            // 切换仓库时，通知相关服务刷新
-            NotificationCenter.default.post(name: .activeRepositoryDidChange, object: nil)
-        }
+    /// 更新当前激活仓库并持久化，同时通知非 SwiftUI 服务刷新
+    func setActiveRepository(_ id: UUID?) {
+        activeRepositoryID = id
+        UserDefaults.standard.set(id?.uuidString, forKey: "activeRepositoryID")
+        // 切换仓库时，通知相关服务刷新
+        NotificationCenter.default.post(name: .activeRepositoryDidChange, object: nil)
     }
 
     /// 当前激活的仓库信息
@@ -50,7 +49,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
                 var list = repositories
                 if let index = list.firstIndex(where: { $0.id == activeID }) {
                     list[index].url = newValue
-                    repositories = list
+                    setRepositories(list)
                 }
             }
         }
@@ -64,7 +63,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
                 var list = repositories
                 if let index = list.firstIndex(where: { $0.id == activeID }) {
                     list[index].branch = newValue
-                    repositories = list
+                    setRepositories(list)
                 }
             }
         }
@@ -119,19 +118,19 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
     /// 重置所有状态（断开连接时调用）
     func reset() {
         guard let activeID = activeRepositoryID else { return }
-        
+
         // 从列表中移除当前仓库
         var list = repositories
         if let index = list.firstIndex(where: { $0.id == activeID }) {
             list.remove(at: index)
-            repositories = list
+            setRepositories(list)
         }
 
         // 删除本地仓库目录
         try? FileManager.default.removeItem(at: repoRootURL)
 
         // 切换到下一个可用仓库，或者设为 nil
-        activeRepositoryID = repositories.first?.id
+        setActiveRepository(repositories.first?.id)
 
         // 重置同步状态
         Task { @MainActor in
@@ -155,6 +154,19 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         _ = gitLibgit2Init()
         // 设置系统 CA 证书，解决 OpenSSL 找不到根证书的问题
         setupSSLCertificates()
+        // 从 UserDefaults 加载持久化状态到内存缓存
+        loadPersistedState()
+    }
+
+    /// 从 UserDefaults 加载仓库列表与激活仓库 ID 到内存缓存
+    private func loadPersistedState() {
+        if let data = UserDefaults.standard.data(forKey: "repositories"),
+           let list = try? JSONDecoder().decode([RepositoryInfo].self, from: data) {
+            repositories = list
+        }
+        if let str = UserDefaults.standard.string(forKey: "activeRepositoryID") {
+            activeRepositoryID = UUID(uuidString: str)
+        }
     }
 
     deinit {
@@ -187,10 +199,10 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
             
             var list = repositories
             list.append(newRepo)
-            repositories = list
-            
+            setRepositories(list)
+
             // 设为当前激活仓库
-            activeRepositoryID = tempID
+            setActiveRepository(tempID)
 
             print("[GitSyncService] clone API successful")
             await updateState(.success)

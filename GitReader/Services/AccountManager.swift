@@ -68,7 +68,7 @@ final class AccountManager: ObservableObject, @unchecked Sendable {
             }
         }
         if changed {
-            GitSyncService.shared.repositories = repos
+            GitSyncService.shared.setRepositories(repos)
         }
     }
     
