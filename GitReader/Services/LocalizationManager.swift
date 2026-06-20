@@ -1031,10 +1031,6 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
             "en": "Delete Repository",
             "zh-Hans": "删除仓库"
         ],
-        "repo_info": [
-            "en": "Repository Information",
-            "zh-Hans": "仓库信息"
-        ],
         "auth_account": [
             "en": "Authentication Account",
             "zh-Hans": "认证账号"
@@ -1082,10 +1078,6 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
         "add_repo_title": [
             "en": "Add Repository",
             "zh-Hans": "添加仓库"
-        ],
-        "cancel": [
-            "en": "Cancel",
-            "zh-Hans": "取消"
         ],
         "clone": [
             "en": "Clone",
