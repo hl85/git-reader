@@ -15,14 +15,45 @@ settings:
     DEAD_CODE_STRIPPING: YES
     DEVELOPMENT_TEAM: ""  # 请填入你的 Apple Developer Team ID
     CODE_SIGN_STYLE: Automatic
-    MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "1"
 
 targets:
   GitReader:
     type: application
     platform: iOS
     deploymentTarget: "17.0"
+    configFiles:
+      Debug: GitReader/Version.xcconfig
+      Release: GitReader/Version.xcconfig
+    preBuildScripts:
+      - name: "Auto Update Version & Build"
+        shell: /bin/sh
+        script: |
+          # 确保在项目根目录下运行
+          cd "$SRCROOT"
+
+          # 1. 获取 Git 总提交次数作为 Build 号 (CURRENT_PROJECT_VERSION)
+          git_commit_count=$(git rev-list --count HEAD)
+          if [ -z "$git_commit_count" ]; then
+              git_commit_count=1
+          fi
+
+          # 2. 获取最新的 Git Tag 作为 Version 号 (MARKETING_VERSION)
+          git_tag=$(git describe --tags --abbrev=0 2>/dev/null)
+          if [ -z "$git_tag" ]; then
+              marketing_version="0.1.2"
+          else
+              # 去掉 tag 前面的 'v' 字符
+              marketing_version=$(echo "$git_tag" | sed 's/^v//')
+          fi
+
+          # 3. 将结果写入 Version.xcconfig
+          cat << EOF > GitReader/Version.xcconfig
+          // 自动生成的文件，请勿手动修改，且需加入 .gitignore
+          MARKETING_VERSION = $marketing_version
+          CURRENT_PROJECT_VERSION = $git_commit_count
+          EOF
+
+          echo "Updated Version.xcconfig: Version=$marketing_version, Build=$git_commit_count"
     sources:
       - path: GitReader
         excludes:
