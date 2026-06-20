@@ -106,6 +106,56 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
             "fr": "Connecter le dépôt Git\nLire les notes Obsidian sur votre téléphone",
             "ko": "Git 리포지토리 연결\n휴대폰에서 Obsidian 노트 읽기"
         ],
+        "welcome_to_gits_reader": [
+            "en": "Welcome to Gits Reader",
+            "zh-Hans": "欢迎使用 Gits Reader",
+            "zh-Hant": "歡迎使用 Gits Reader"
+        ],
+        "add_first_repo": [
+            "en": "Add Your First Repository",
+            "zh-Hans": "添加您的第一个仓库",
+            "zh-Hant": "添加您的第一個倉庫"
+        ],
+        "welcome_feature_multi_repo": [
+            "en": "Multi-Repository Support",
+            "zh-Hans": "多仓库支持",
+            "zh-Hant": "多倉庫支援"
+        ],
+        "welcome_feature_multi_repo_desc": [
+            "en": "Seamlessly switch between multiple Git repositories with independent configurations.",
+            "zh-Hans": "无缝切换多个 Git 仓库，支持独立配置。",
+            "zh-Hant": "無縫切換多個 Git 倉庫，支援獨立配置。"
+        ],
+        "welcome_feature_oauth": [
+            "en": "OAuth Device Login",
+            "zh-Hans": "OAuth 快速登录",
+            "zh-Hant": "OAuth 快速登入"
+        ],
+        "welcome_feature_oauth_desc": [
+            "en": "Log in to GitHub or GitLab securely using device flow without copying tokens.",
+            "zh-Hans": "支持 GitHub 和 GitLab 设备流登录，无需手动复制 Token。",
+            "zh-Hant": "支援 GitHub 和 GitLab 裝置流登入，無需手動複製 Token。"
+        ],
+        "welcome_feature_offline": [
+            "en": "Offline Reading",
+            "zh-Hans": "离线阅读",
+            "zh-Hant": "離線閱讀"
+        ],
+        "welcome_feature_offline_desc": [
+            "en": "Clone repositories locally to read your Obsidian notes anytime, anywhere.",
+            "zh-Hans": "本地克隆，随时随地阅读您的 Obsidian 笔记。",
+            "zh-Hant": "本地複製，隨時隨地閱讀您的 Obsidian 筆記。"
+        ],
+        "welcome_feature_secure": [
+            "en": "Secure Storage",
+            "zh-Hans": "安全存储",
+            "zh-Hant": "安全存儲"
+        ],
+        "welcome_feature_secure_desc": [
+            "en": "Your access tokens are securely stored in the system Keychain and never uploaded.",
+            "zh-Hans": "您的 Token 安全存储于系统 Keychain 中，绝不上传。",
+            "zh-Hant": "您的 Token 安全儲存於系統 Keychain 中，絕不上傳。"
+        ],
         
         // Repo Config Form
         "repo_address": [

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="1024" height="1024">
+  <!-- Background for iOS App Icon (Optional, can be removed for transparent logo) -->
+  <rect width="100" height="100" rx="22" fill="#FBFBFA"/>
+  
+  <!-- Left Page of the Book -->
+  <path d="M 50 25 C 35 20, 25 30, 25 50 C 25 70, 35 80, 50 75" 
+        fill="none" 
+        stroke="#1A1A1A" 
+        stroke-width="3" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+        
+  <!-- Right Page of the Book -->
+  <path d="M 50 25 C 65 20, 75 30, 75 50 C 75 70, 65 80, 50 75" 
+        fill="none" 
+        stroke="#1A1A1A" 
+        stroke-width="3" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+        
+  <!-- Spine (Git Branch Line) -->
+  <line x1="50" y1="10" x2="50" y2="90" 
+        stroke="#D97757" 
+        stroke-width="3" 
+        stroke-linecap="round"/>
+        
+  <!-- Top Git Node -->
+  <circle cx="50" cy="25" r="4" fill="#D97757"/>
+  
+  <!-- Bottom Git Node -->
+  <circle cx="50" cy="75" r="4" fill="#D97757"/>
+</svg>

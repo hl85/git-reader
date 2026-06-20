@@ -1,44 +1,72 @@
 import SwiftUI
 
-/// 仓库配置页：首次使用时输入 Git URL + PAT
+/// 仓库配置页：首次使用时的欢迎与初始化页面
 struct RepoConfigView: View {
     @Binding var hasConfiguredRepo: Bool
     @StateObject private var localizationManager = LocalizationManager.shared
-
-    @State private var repoURL = ""
-    @State private var patToken = ""
-    @State private var isConnecting = false
-    @State private var errorMessage: String?
-    @State private var showToast = false
-    @State private var toastMessage = ""
-    @State private var branch = "main"
-
-    private var isFormValid: Bool {
-        !repoURL.trimmingCharacters(in: .whitespaces).isEmpty
-            && !patToken.trimmingCharacters(in: .whitespaces).isEmpty
-            && !branch.trimmingCharacters(in: .whitespaces).isEmpty
-    }
+    @StateObject private var syncService = GitSyncService.shared
+    
+    @State private var showAddRepoSheet = false
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 32) {
-                    // Logo + 标题
-                    headerSection
-
-                    // 表单
-                    formSection
-
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(spacing: 40) {
+                        // Logo + 标题
+                        headerSection
+                        
+                        // 功能特性介绍
+                        featuresSection
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 40)
+                    .padding(.bottom, 24)
+                }
+                
+                // 底部操作区
+                VStack(spacing: 16) {
+                    // 开始使用按钮
+                    Button(action: { showAddRepoSheet = true }) {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.headline)
+                            Text("add_first_repo".localized)
+                                .font(ClaudeTypography.bodyFont.weight(.semibold))
+                        }
+                        .foregroundStyle(ClaudeColors.background)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(ClaudeColors.text)
+                        .cornerRadius(12)
+                    }
+                    
                     // 安全声明
                     footerSection
                 }
                 .padding(.horizontal, 24)
-                .padding(.top, 40)
+                .padding(.top, 16)
+                .padding(.bottom, 24)
+                .background(ClaudeColors.background)
             }
             .background(ClaudeColors.background)
-            .scrollDismissesKeyboard(.immediately)
-            .overlay(alignment: .bottom) {
-                ToastView(message: toastMessage, isPresented: $showToast)
+            .sheet(isPresented: $showAddRepoSheet) {
+                AddRepositoryView()
+                    .onDisappear {
+                        // 当弹窗消失时，如果已经成功配置了仓库，则切换到主界面
+                        if syncService.isConfigured {
+                            withAnimation(.easeInOut(duration: 0.4)) {
+                                hasConfiguredRepo = true
+                            }
+                        }
+                    }
+            }
+            .onChange(of: syncService.isConfigured) { _, isConfigured in
+                if isConfigured {
+                    withAnimation(.easeInOut(duration: 0.4)) {
+                        hasConfiguredRepo = true
+                    }
+                }
             }
         }
     }
@@ -47,151 +75,80 @@ struct RepoConfigView: View {
 
     private var headerSection: some View {
         VStack(spacing: 24) {
-            // Vector Logo (Static version of Splash Logo)
-            ZStack {
-                // Left Page
-                LeftPageShape()
-                    .stroke(ClaudeColors.text, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                
-                // Right Page
-                RightPageShape()
-                    .stroke(ClaudeColors.text, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                
-                // Spine (Git Branch Line)
-                GeometryReader { geo in
-                    Path { path in
-                        path.move(to: CGPoint(x: geo.size.width / 2, y: 10 * (geo.size.height / 100)))
-                        path.addLine(to: CGPoint(x: geo.size.width / 2, y: 90 * (geo.size.height / 100)))
-                    }
-                    .stroke(ClaudeColors.accent, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                }
-                
-                // Top Node
-                Circle()
-                    .fill(ClaudeColors.accent)
-                    .frame(width: 8, height: 8)
-                    .position(x: 60, y: 30)
-                
-                // Bottom Node
-                Circle()
-                    .fill(ClaudeColors.accent)
-                    .frame(width: 8, height: 8)
-                    .position(x: 60, y: 90)
-            }
-            .frame(width: 120, height: 120)
+            // App Icon Logo
+            Image("Logo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 100, height: 100)
+                .clipShape(RoundedRectangle(cornerRadius: 22))
+                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
 
             VStack(spacing: 8) {
                 Text("Gits Reader")
-                    .font(.custom("Georgia", size: 30))
+                    .font(.custom("Georgia", size: 32))
                     .fontWeight(.medium)
                     .foregroundColor(ClaudeColors.text)
 
-                Text("YOUR OBSIDIAN VAULT")
-                    .font(.system(size: 11, weight: .regular, design: .default))
+                Text("welcome_to_gits_reader".localized.uppercased())
+                    .font(.system(size: 11, weight: .semibold, design: .default))
                     .tracking(1.5)
-                    .foregroundColor(ClaudeColors.textSecondary)
+                    .foregroundColor(ClaudeColors.accent)
             }
         }
     }
 
-    // MARK: - Form
+    // MARK: - Features
 
-    private var formSection: some View {
-        VStack(spacing: 20) {
-            // 仓库地址
-            VStack(alignment: .leading, spacing: 8) {
-                label("repo_address".localized)
-                TextField(
-                    "https://github.com/user/notes.git",
-                    text: $repoURL
-                )
-                .font(ClaudeTypography.codeCaptionFont)
-                .textContentType(.URL)
-                .keyboardType(.URL)
-                .autocapitalization(.none)
-                .disableAutocorrection(true)
-                .padding(.horizontal, 14)
-                .frame(height: 48)
-                .background(ClaudeColors.background)
-                .cornerRadius(10)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(ClaudeColors.border, lineWidth: 1)
-                )
-            }
+    private var featuresSection: some View {
+        VStack(spacing: 24) {
+            featureRow(
+                icon: "folder.badge.plus",
+                title: "welcome_feature_multi_repo".localized,
+                description: "welcome_feature_multi_repo_desc".localized
+            )
+            
+            featureRow(
+                icon: "key.fill",
+                title: "welcome_feature_oauth".localized,
+                description: "welcome_feature_oauth_desc".localized
+            )
+            
+            featureRow(
+                icon: "wifi.slash",
+                title: "welcome_feature_offline".localized,
+                description: "welcome_feature_offline_desc".localized
+            )
+            
+            featureRow(
+                icon: "lock.shield.fill",
+                title: "welcome_feature_secure".localized,
+                description: "welcome_feature_secure_desc".localized
+            )
+        }
+        .padding(.vertical, 8)
+    }
 
-            // PAT Token
-            VStack(alignment: .leading, spacing: 8) {
-                label("pat_token".localized)
-                SecureField(
-                    "ghp_xxxxxxxxxxxxxxxxxxxx",
-                    text: $patToken
-                )
-                .font(ClaudeTypography.codeCaptionFont)
-                .textContentType(.password)
-                .autocapitalization(.none)
-                .disableAutocorrection(true)
-                .padding(.horizontal, 14)
-                .frame(height: 48)
-                .background(ClaudeColors.background)
-                .cornerRadius(10)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(ClaudeColors.border, lineWidth: 1)
-                )
+    private func featureRow(icon: String, title: String, description: String) -> some View {
+        HStack(alignment: .top, spacing: 16) {
+            Image(systemName: icon)
+                .font(.system(size: 22))
+                .foregroundStyle(ClaudeColors.accent)
+                .frame(width: 32, height: 32)
+                .background(ClaudeColors.tagBackground)
+                .cornerRadius(8)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(ClaudeTypography.bodyFont.weight(.semibold))
+                    .foregroundStyle(ClaudeColors.text)
+                
+                Text(description)
+                    .font(.system(.subheadline, design: .serif))
+                    .foregroundStyle(ClaudeColors.textSecondary)
+                    .lineSpacing(4)
             }
-
-            // 分支
-            VStack(alignment: .leading, spacing: 8) {
-                label("repo_branch".localized)
-                TextField(
-                    "main",
-                    text: $branch
-                )
-                .font(ClaudeTypography.codeCaptionFont)
-                .autocapitalization(.none)
-                .disableAutocorrection(true)
-                .padding(.horizontal, 14)
-                .frame(height: 48)
-                .background(ClaudeColors.background)
-                .cornerRadius(10)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(ClaudeColors.border, lineWidth: 1)
-                )
-            }
-
-            // 错误提示
-            if let error = errorMessage {
-                Text(error)
-                    .font(.system(.caption, design: .serif))
-                    .foregroundStyle(ClaudeColors.accent)
-                    .transition(.opacity)
-            }
-
-            // 提交按钮
-            Button(action: connectRepository) {
-                Group {
-                    if isConnecting {
-                        HStack(spacing: 8) {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                            Text("connecting".localized)
-                        }
-                    } else {
-                        Text("connect_repo".localized)
-                    }
-                }
-                .font(ClaudeTypography.bodyFont.weight(.semibold))
-                .foregroundStyle(ClaudeColors.background)
-                .frame(maxWidth: .infinity)
-                .frame(height: 48)
-                .background(ClaudeColors.text)
-                .cornerRadius(10)
-            }
-            .disabled(!isFormValid || isConnecting)
-            .opacity((!isFormValid || isConnecting) ? 0.4 : 1.0)
-            .animation(.easeInOut(duration: 0.2), value: isFormValid)
+            
+            Spacer()
         }
     }
 
@@ -203,55 +160,6 @@ struct RepoConfigView: View {
             .foregroundStyle(ClaudeColors.textMuted)
             .multilineTextAlignment(.center)
             .lineSpacing(4)
-            .padding(.top, 8)
-    }
-
-    // MARK: - Actions
-
-    private func label(_ text: String) -> some View {
-        Text(text.uppercased())
-            .font(ClaudeTypography.monoCaptionFont.weight(.medium))
-            .foregroundStyle(ClaudeColors.textSecondary)
-            .tracking(0.8)
-    }
-
-    private func connectRepository() {
-        errorMessage = nil
-        isConnecting = true
-
-        let trimmedURL = repoURL.trimmingCharacters(in: .whitespaces)
-        let trimmedToken = patToken.trimmingCharacters(in: .whitespaces)
-
-        // 仅进行 HTTP Session 级别的连接测试
-        Task {
-            do {
-                try await GitSyncService.shared.testConnection(repoURL: trimmedURL, token: trimmedToken)
-                
-                // 测试成功后，保存 Token 到 Keychain
-                try KeychainService.shared.saveToken(trimmedToken)
-                
-                // 持久化仓库配置信息
-                let trimmedBranch = branch.trimmingCharacters(in: .whitespaces)
-                GitSyncService.shared.repoURL = trimmedURL
-                GitSyncService.shared.branch = trimmedBranch.isEmpty ? "main" : trimmedBranch
-                
-                await MainActor.run {
-                    isConnecting = false
-                    toastMessage = "repo_connected_success".localized
-                    showToast = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        withAnimation(.easeInOut(duration: 0.4)) {
-                            hasConfiguredRepo = true
-                        }
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    errorMessage = "connection_failed_with_error".localized(arguments: error.localizedDescription)
-                    isConnecting = false
-                }
-            }
-        }
     }
 }
 
