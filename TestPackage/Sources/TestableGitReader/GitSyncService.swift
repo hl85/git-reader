@@ -17,17 +17,17 @@ final class GitSyncService {
         return FileManager.default.fileExists(atPath: gitDir.path)
     }
 
-    /// 校验同步前置条件（与 app 端行为一致，使用硬编码错误消息）
-    /// - Throws: SyncError.unknown 当 Token / repoURL / 本地仓库缺失时
+    /// 校验同步前置条件（与 app 端行为一致）
+    /// - Throws: SyncError 当 Token / repoURL / 本地仓库缺失时
     func validateForSync() throws {
         guard KeychainService.shared.readToken() != nil else {
-            throw SyncError.unknown("未找到 Access Token，请重新连接仓库")
+            throw SyncError.tokenMissing
         }
         guard !repoURL.isEmpty else {
-            throw SyncError.unknown("未配置仓库地址")
+            throw SyncError.repoNotConfigured
         }
         guard isLocalRepoExists else {
-            throw SyncError.unknown("本地仓库未完成初始化，请等待克隆完成")
+            throw SyncError.localRepoNotInitialized
         }
     }
 

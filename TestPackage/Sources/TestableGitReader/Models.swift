@@ -76,6 +76,9 @@ enum SyncState {
 public enum SyncError: LocalizedError {
     case authFailed
     case networkUnreachable
+    case tokenMissing
+    case repoNotConfigured
+    case localRepoNotInitialized
     case unknown(String)
 
     public var errorDescription: String? {
@@ -84,6 +87,12 @@ public enum SyncError: LocalizedError {
             return "认证失败，请检查 Token 是否正确"
         case .networkUnreachable:
             return "网络不可达，已切换到离线模式"
+        case .tokenMissing:
+            return "未找到 Token，请先在设置中配置"
+        case .repoNotConfigured:
+            return "未配置仓库地址，请先在设置中配置"
+        case .localRepoNotInitialized:
+            return "本地仓库未初始化，请先克隆仓库"
         case .unknown(let message):
             return message
         }

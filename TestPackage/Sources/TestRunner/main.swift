@@ -783,7 +783,7 @@ runSuite("§4.3 错误处理验证 - 同步前置校验") {
         try? FileManager.default.removeItem(at: GitSyncService.shared.repoRootURL)
     }
 
-    // 场景 3：Token 缺失 → validateForSync 抛 unknown
+    // 场景 3：Token 缺失 → validateForSync 抛 tokenMissing
     test("场景3: Token 缺失时 validateForSync 抛错") {
         KeychainService.shared.deleteToken()
         GitSyncService.shared.repoURL = "https://github.com/user/repo.git"
@@ -794,9 +794,9 @@ runSuite("§4.3 错误处理验证 - 同步前置校验") {
         do {
             try GitSyncService.shared.validateForSync()
         } catch let e as SyncError {
-            if case .unknown(let msg) = e, msg.contains("Token") { caughtTokenError = true }
+            if case .tokenMissing = e { caughtTokenError = true }
         } catch {}
-        try assertTrue(caughtTokenError, "Token 缺失应抛含 'Token' 的错误")
+        try assertTrue(caughtTokenError, "Token 缺失应抛 tokenMissing 错误")
     }
 
     // 场景 3b：repoURL 空 → validateForSync 抛错
@@ -810,9 +810,9 @@ runSuite("§4.3 错误处理验证 - 同步前置校验") {
         do {
             try GitSyncService.shared.validateForSync()
         } catch let e as SyncError {
-            if case .unknown(let msg) = e, msg.contains("仓库地址") { caughtURLError = true }
+            if case .repoNotConfigured = e { caughtURLError = true }
         } catch {}
-        try assertTrue(caughtURLError, "repoURL 空应抛含 '仓库地址' 的错误")
+        try assertTrue(caughtURLError, "repoURL 空应抛 repoNotConfigured 错误")
         KeychainService.shared.deleteToken()
     }
 
@@ -826,9 +826,9 @@ runSuite("§4.3 错误处理验证 - 同步前置校验") {
         do {
             try GitSyncService.shared.validateForSync()
         } catch let e as SyncError {
-            if case .unknown(let msg) = e, msg.contains("本地仓库") { caughtRepoError = true }
+            if case .localRepoNotInitialized = e { caughtRepoError = true }
         } catch {}
-        try assertTrue(caughtRepoError, "本地仓库缺失应抛含 '本地仓库' 的错误")
+        try assertTrue(caughtRepoError, "本地仓库缺失应抛 localRepoNotInitialized 错误")
         KeychainService.shared.deleteToken()
     }
 
@@ -843,6 +843,8 @@ runSuite("§4.3 错误处理验证 - 同步前置校验") {
         var threwError = false
         do {
             try GitSyncService.shared.validateForSync()
+        } catch let e as SyncError {
+            if case .localRepoNotInitialized = e { threwError = true }
         } catch {
             threwError = true
         }

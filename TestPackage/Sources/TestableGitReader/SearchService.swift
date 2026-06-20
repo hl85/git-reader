@@ -46,7 +46,13 @@ final class SearchService: ObservableObject {
             entries.append(entry)
         }
 
-        self.index = entries
+        if Thread.isMainThread {
+            self.index = entries
+        } else {
+            DispatchQueue.main.async {
+                self.index = entries
+            }
+        }
     }
 
     /// 搜索过滤

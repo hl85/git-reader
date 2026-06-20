@@ -15,6 +15,9 @@ final class FileScannerService: @unchecked Sendable {
         ".git", ".obsidian", ".trash", "node_modules", ".DS_Store"
     ]
 
+    private let lock = NSLock()
+    private var cachedNoteIndex: [String: URL]?
+
     private init() {
         self.repoRoot = GitSyncService.shared.repoRootURL
     }
@@ -39,30 +42,69 @@ final class FileScannerService: @unchecked Sendable {
     /// - Parameter noteName: WikiLinks 中的目标笔记名（大小写不敏感，支持路径型 [[folder/note]]）
     /// - Returns: 匹配的 .md 文件 URL，未找到返回 nil
     func findNote(named noteName: String) -> URL? {
+        let cleanNoteName = noteName.trimmingCharacters(in: .whitespaces)
+        guard !cleanNoteName.isEmpty else { return nil }
+        let lowercasedNoteName = cleanNoteName.lowercased()
+
+        // 1. 优先从内存缓存中读取
+        lock.lock()
+        if let cached = cachedNoteIndex {
+            if let match = cached[lowercasedNoteName] {
+                lock.unlock()
+                return match
+            }
+            // 如果缓存中没有，且输入是路径型，尝试取最后一段匹配
+            let lastComponent = cleanNoteName.components(separatedBy: "/").last?.trimmingCharacters(in: .whitespaces) ?? ""
+            if !lastComponent.isEmpty, let match = cached[lastComponent.lowercased()] {
+                lock.unlock()
+                return match
+            }
+            lock.unlock()
+            return nil
+        }
+        lock.unlock()
+
+        // 2. 缓存未命中或未建立时，回退到全盘扫描（兼容未初始化状态）
         let allFiles = getAllMarkdownFiles()
-        // 支持路径型 WikiLinks：[[folder/note]] → 取最后一段 "note"
-        let resolved = noteName
-            .components(separatedBy: "/")
-            .last?
-            .trimmingCharacters(in: .whitespaces)
-            ?? noteName
-        guard !resolved.isEmpty else { return nil }
-        let lowercased = resolved.lowercased()
+
+        // 2.1 优先尝试完整相对路径匹配 (e.g., "folder/note")
+        if let match = allFiles.first(where: { file in
+            let relativePath = file.path.replacingOccurrences(of: repoRoot.path + "/", with: "")
+            let notePath = (relativePath as NSString).deletingPathExtension
+            return notePath.lowercased() == lowercasedNoteName
+        }) {
+            return match
+        }
+
+        // 2.2 退化为匹配最后一段文件名 (e.g., "note")
+        let lastComponent = cleanNoteName.components(separatedBy: "/").last?.trimmingCharacters(in: .whitespaces) ?? ""
+        guard !lastComponent.isEmpty else { return nil }
+        let lowercasedLast = lastComponent.lowercased()
 
         return allFiles.first { file in
             let filename = file.deletingPathExtension().lastPathComponent
-            return filename.lowercased() == lowercased
+            return filename.lowercased() == lowercasedLast
         }
     }
 
     /// 构建 [笔记名: 文件路径] 字典，用于 WikiLinks 路由
     func buildNoteIndex() -> [String: URL] {
+        lock.lock()
+        defer { lock.unlock() }
+
         let files = getAllMarkdownFiles()
         var index: [String: URL] = [:]
         for file in files {
-            let noteName = file.deletingPathExtension().lastPathComponent
-            index[noteName.lowercased()] = file
+            // 1. 存入文件名作为 Key (e.g., "note")
+            let filename = file.deletingPathExtension().lastPathComponent
+            index[filename.lowercased()] = file
+
+            // 2. 存入完整相对路径作为 Key (e.g., "folder/note")
+            let relativePath = file.path.replacingOccurrences(of: repoRoot.path + "/", with: "")
+            let notePath = (relativePath as NSString).deletingPathExtension
+            index[notePath.lowercased()] = file
         }
+        self.cachedNoteIndex = index
         return index
     }
 

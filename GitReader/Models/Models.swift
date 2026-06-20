@@ -74,6 +74,9 @@ enum SyncState: Equatable {
 enum SyncError: LocalizedError {
     case authFailed
     case networkUnreachable
+    case tokenMissing
+    case repoNotConfigured
+    case localRepoNotInitialized
     case unknown(String)
 
     var errorDescription: String? {
@@ -82,6 +85,12 @@ enum SyncError: LocalizedError {
             return "auth_failed_error".localized
         case .networkUnreachable:
             return "network_unreachable_error".localized
+        case .tokenMissing:
+            return "token_not_found_error".localized
+        case .repoNotConfigured:
+            return "repo_not_configured_error".localized
+        case .localRepoNotInitialized:
+            return "local_repo_not_initialized_error".localized
         case .unknown(let message):
             return message
         }

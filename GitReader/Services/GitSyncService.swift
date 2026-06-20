@@ -53,13 +53,13 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
     /// 校验同步前置条件
     func validateForSync() throws {
         guard KeychainService.shared.readToken() != nil else {
-            throw SyncError.unknown("token_not_found_error".localized)
+            throw SyncError.tokenMissing
         }
         guard !repoURL.isEmpty else {
-            throw SyncError.unknown("repo_not_configured_error".localized)
+            throw SyncError.repoNotConfigured
         }
         guard isLocalRepoExists else {
-            throw SyncError.unknown("local_repo_not_initialized_error".localized)
+            throw SyncError.localRepoNotInitialized
         }
     }
 
