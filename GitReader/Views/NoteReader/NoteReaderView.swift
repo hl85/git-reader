@@ -906,14 +906,16 @@ struct BlockQuoteView: View {
 }
 
 struct TableView: View {
-    let table: SwiftMarkdownTable
+    let data: TableData
 
     @AppStorage("readerFontSize") private var fontSizeRaw: String = ReaderFontSize.medium.rawValue
     var fontSize: ReaderFontSize { ReaderFontSize(rawValue: fontSizeRaw) ?? .medium }
 
-    var body: some View {
-        let data = MarkdownBlockClassifier.extractTable(table)
+    init(table: SwiftMarkdownTable) {
+        self.data = MarkdownBlockClassifier.extractTable(table)
+    }
 
+    var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
                 ForEach(Array(data.headers.enumerated()), id: \.offset) { _, header in
