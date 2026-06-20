@@ -184,9 +184,7 @@ struct FileListView: View {
 
                         // 设置按钮
                         NavigationLink(destination: SettingsView(
-                            hasConfiguredRepo: $hasConfiguredRepo,
-                            repoURL: GitSyncService.shared.repoURL,
-                            branch: GitSyncService.shared.branch
+                            hasConfiguredRepo: $hasConfiguredRepo
                         )) {
                             Image(systemName: "gearshape")
                                 .font(.system(size: 16))
@@ -202,6 +200,10 @@ struct FileListView: View {
                 ToastView(message: toastMessage, isPresented: $showToast)
             }
             .onAppear {
+                loadFiles()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .activeRepositoryDidChange)) { _ in
+                print("[FileListView] Received activeRepositoryDidChange notification, reloading files...")
                 loadFiles()
             }
         }
@@ -513,8 +515,10 @@ struct FileListView: View {
 
     private func loadFiles() {
         repoName = GitSyncService.shared.repoDisplayName
+        print("[FileListView] loadFiles called. Active repo: \(repoName) (ID: \(String(describing: GitSyncService.shared.activeRepositoryID)))")
 
         guard GitSyncService.shared.isLocalRepoExists else {
+            print("[FileListView] Local repo does not exist, triggering initial clone...")
             triggerInitialClone()
             return
         }
@@ -525,6 +529,7 @@ struct FileListView: View {
         }
         cloneError = nil
 
+        print("[FileListView] Starting background scan for repo: \(repoName)...")
         DispatchQueue.global(qos: .userInitiated).async {
             let scanner = FileScannerService.shared
             let scannedFolders = scanner.scanDirectory()
@@ -532,6 +537,7 @@ struct FileListView: View {
             SearchService.shared.rebuildIndex()
 
             DispatchQueue.main.async {
+                print("[FileListView] Background scan completed. Scanned \(scannedFolders.count) folders, \(index.count) notes.")
                 self.folders = scannedFolders
                 self.noteIndex = index
                 self.isLoading = false

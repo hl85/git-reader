@@ -1176,6 +1176,58 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
         "device_flow_invalid_response": [
             "en": "Invalid response from server.",
             "zh-Hans": "服务器返回了无效响应。"
+        ],
+        "select_repo": [
+            "en": "Select Repository",
+            "zh-Hans": "选择仓库"
+        ],
+        "select_branch": [
+            "en": "Select Branch",
+            "zh-Hans": "选择分支"
+        ],
+        "loading_repos": [
+            "en": "Loading repositories...",
+            "zh-Hans": "正在加载仓库列表..."
+        ],
+        "loading_branches": [
+            "en": "Loading branches...",
+            "zh-Hans": "正在加载分支列表..."
+        ],
+        "device_flow_login": [
+            "en": "Device Code",
+            "zh-Hans": "验证码登录"
+        ],
+        "token_login": [
+            "en": "Access Token",
+            "zh-Hans": "Token 登录"
+        ],
+        "verify_and_login": [
+            "en": "Verify & Login",
+            "zh-Hans": "验证并登录"
+        ],
+        "verifying": [
+            "en": "Verifying...",
+            "zh-Hans": "正在验证..."
+        ],
+        "enter_token_placeholder": [
+            "en": "Enter Personal Access Token...",
+            "zh-Hans": "请输入个人访问令牌 (Token)..."
+        ],
+        "all_repos": [
+            "en": "All Repositories",
+            "zh-Hans": "全部仓库"
+        ],
+        "management": [
+            "en": "Management",
+            "zh-Hans": "管理"
+        ],
+        "switch": [
+            "en": "Switch",
+            "zh-Hans": "切换"
+        ],
+        "accounts_count": [
+            "en": "Accounts",
+            "zh-Hans": "个账号"
         ]
     ]
 }

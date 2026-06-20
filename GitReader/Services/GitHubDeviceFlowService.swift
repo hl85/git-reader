@@ -98,6 +98,109 @@ final class GitHubDeviceFlowService: ObservableObject, @unchecked Sendable {
             }
         }
     }
+    
+    // MARK: - GitHub API Methods
+    
+    struct GitHubUserResponse: Codable {
+        let login: String
+    }
+
+    struct GitHubRepo: Codable, Identifiable, Hashable {
+        let id: Int
+        let name: String
+        let fullName: String
+        let cloneUrl: String
+        let isPrivate: Bool
+        
+        enum CodingKeys: String, CodingKey {
+            case id
+            case name
+            case fullName = "full_name"
+            case cloneUrl = "clone_url"
+            case isPrivate = "private"
+        }
+    }
+
+    struct GitHubBranch: Codable {
+        let name: String
+    }
+    
+    /// 获取用户信息（用户名）
+    func fetchUserInfo(token: String) async throws -> String {
+        guard let url = URL(string: "https://api.github.com/user") else {
+            throw URLError(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
+        request.setValue("GitReader-App", forHTTPHeaderField: "User-Agent")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            throw URLError(.userAuthenticationRequired)
+        }
+        
+        let user = try JSONDecoder().decode(GitHubUserResponse.self, from: data)
+        return user.login
+    }
+    
+    /// 获取用户仓库列表
+    func fetchRepositories(token: String) async throws -> [GitHubRepo] {
+        guard let url = URL(string: "https://api.github.com/user/repos?per_page=100&sort=updated") else {
+            throw URLError(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
+        request.setValue("GitReader-App", forHTTPHeaderField: "User-Agent")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            throw URLError(.userAuthenticationRequired)
+        }
+        
+        return try JSONDecoder().decode([GitHubRepo].self, from: data)
+    }
+    
+    /// 获取仓库分支列表
+    func fetchBranches(token: String, owner: String, repo: String) async throws -> [String] {
+        guard let url = URL(string: "https://api.github.com/repos/\(owner)/\(repo)/branches?per_page=100") else {
+            throw URLError(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
+        request.setValue("GitReader-App", forHTTPHeaderField: "User-Agent")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            throw URLError(.userAuthenticationRequired)
+        }
+        
+        let branches = try JSONDecoder().decode([GitHubBranch].self, from: data)
+        return branches.map { $0.name }
+    }
 }
 
 enum DeviceFlowError: LocalizedError {

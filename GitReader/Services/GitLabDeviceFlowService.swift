@@ -115,4 +115,102 @@ final class GitLabDeviceFlowService: ObservableObject, @unchecked Sendable {
             }
         }
     }
+    
+    // MARK: - GitLab API Methods
+    
+    struct GitLabUserResponse: Codable {
+        let username: String
+    }
+
+    struct GitLabRepo: Codable, Identifiable, Hashable {
+        let id: Int
+        let name: String
+        let pathWithNamespace: String
+        let httpUrlToRepo: String
+        
+        enum CodingKeys: String, CodingKey {
+            case id
+            case name
+            case pathWithNamespace = "path_with_namespace"
+            case httpUrlToRepo = "http_url_to_repo"
+        }
+    }
+
+    struct GitLabBranch: Codable {
+        let name: String
+    }
+    
+    /// 获取用户信息（用户名）
+    func fetchUserInfo(token: String, serverURL: String?) async throws -> String {
+        guard let baseURL = getBaseURL(from: serverURL),
+              let url = URL(string: "/api/v4/user", relativeTo: baseURL) else {
+            throw URLError(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("GitReader-App", forHTTPHeaderField: "User-Agent")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            throw URLError(.userAuthenticationRequired)
+        }
+        
+        let user = try JSONDecoder().decode(GitLabUserResponse.self, from: data)
+        return user.username
+    }
+    
+    /// 获取用户仓库列表
+    func fetchRepositories(token: String, serverURL: String?) async throws -> [GitLabRepo] {
+        guard let baseURL = getBaseURL(from: serverURL),
+              let url = URL(string: "/api/v4/projects?membership=true&simple=true&per_page=100&order_by=last_activity_at", relativeTo: baseURL) else {
+            throw URLError(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("GitReader-App", forHTTPHeaderField: "User-Agent")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            throw URLError(.userAuthenticationRequired)
+        }
+        
+        return try JSONDecoder().decode([GitLabRepo].self, from: data)
+    }
+    
+    /// 获取仓库分支列表
+    func fetchBranches(token: String, serverURL: String?, projectID: Int) async throws -> [String] {
+        guard let baseURL = getBaseURL(from: serverURL),
+              let url = URL(string: "/api/v4/projects/\(projectID)/repository/branches?per_page=100", relativeTo: baseURL) else {
+            throw URLError(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("GitReader-App", forHTTPHeaderField: "User-Agent")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            throw URLError(.userAuthenticationRequired)
+        }
+        
+        let branches = try JSONDecoder().decode([GitLabBranch].self, from: data)
+        return branches.map { $0.name }
+    }
 }
