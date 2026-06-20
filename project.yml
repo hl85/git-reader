@@ -66,18 +66,14 @@ targets:
         product: Yams
       - package: Nuke
         product: NukeUI
-      - package: swift-markdown-ui
-        product: MarkdownUI
+      - package: Highlightr
+        product: Highlightr
 
 packages:
-  # ⚠️ swift-libgit2 上游 Package.swift 包含本地路径依赖（path: "../swift-libgit2-base"），
-  # 无法被 SPM 远程解析。三种解决方案见 README "已知问题与备选方案"：
-  #   方案 A: 使用 pre-built XCFramework（推荐）
-  #   方案 B: 用 Process 调 git CLI（已实现见 Services/GitCLISyncService.swift）
-  #   方案 C: 切换到其他 Git 库（如 CGit/ObjectiveGit）
+  # swift-libgit2 上游 Package.swift 包含本地路径依赖（path: "../swift-libgit2-base"），
+  # 无法被 SPM 远程解析，因此使用 LocalPackages 中的本地副本。
   GitLib:
-    url: https://github.com/swift-developer-tools/swift-libgit2.git
-    exactVersion: 1.0.1
+    path: LocalPackages/swift-libgit2-local
   swift-markdown:
     url: https://github.com/swiftlang/swift-markdown.git
     exactVersion: 0.7.2
@@ -87,9 +83,9 @@ packages:
   Nuke:
     url: https://github.com/kean/Nuke.git
     from: 12.0.0
-  swift-markdown-ui:
-    url: https://github.com/gonzalezreal/swift-markdown-ui.git
-    from: 2.0.0
+  Highlightr:
+    url: https://github.com/raspu/Highlightr.git
+    from: 2.2.0
 
 schemes:
   GitReader:

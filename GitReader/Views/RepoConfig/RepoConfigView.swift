@@ -11,10 +11,12 @@ struct RepoConfigView: View {
     @State private var errorMessage: String?
     @State private var showToast = false
     @State private var toastMessage = ""
+    @State private var branch = "main"
 
     private var isFormValid: Bool {
         !repoURL.trimmingCharacters(in: .whitespaces).isEmpty
             && !patToken.trimmingCharacters(in: .whitespaces).isEmpty
+            && !branch.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     var body: some View {
@@ -139,6 +141,26 @@ struct RepoConfigView: View {
                 )
             }
 
+            // 分支
+            VStack(alignment: .leading, spacing: 8) {
+                label("repo_branch".localized)
+                TextField(
+                    "main",
+                    text: $branch
+                )
+                .font(ClaudeTypography.codeCaptionFont)
+                .autocapitalization(.none)
+                .disableAutocorrection(true)
+                .padding(.horizontal, 14)
+                .frame(height: 48)
+                .background(ClaudeColors.background)
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(ClaudeColors.border, lineWidth: 1)
+                )
+            }
+
             // 错误提示
             if let error = errorMessage {
                 Text(error)
@@ -209,8 +231,9 @@ struct RepoConfigView: View {
                 try KeychainService.shared.saveToken(trimmedToken)
                 
                 // 持久化仓库配置信息
+                let trimmedBranch = branch.trimmingCharacters(in: .whitespaces)
                 GitSyncService.shared.repoURL = trimmedURL
-                GitSyncService.shared.branch = "main" // 默认使用 main 分支
+                GitSyncService.shared.branch = trimmedBranch.isEmpty ? "main" : trimmedBranch
                 
                 await MainActor.run {
                     isConnecting = false

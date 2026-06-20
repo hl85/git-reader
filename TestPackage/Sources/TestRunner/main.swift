@@ -844,6 +844,311 @@ runSuite("FileScannerService - extractMetadata") {
 }
 
 // ============================================================
+// SearchService Tests
+// ============================================================
+runSuite("SearchService - rebuildIndex(from:)") {
+    let searchDir = tempDir.appendingPathComponent("search-\(UUID().uuidString)")
+    try? FileManager.default.createDirectory(at: searchDir, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: searchDir) }
+
+    test("含 Frontmatter 的文件解析 title/tags/aliases") {
+        let fileURL = searchDir.appendingPathComponent("note1.md")
+        let content = """
+        ---
+        title: 我的笔记
+        tags: [swift, ios]
+        aliases: [mynote, alias-note]
+        ---
+        # 正文
+        """
+        try! content.write(to: fileURL, atomically: true, encoding: .utf8)
+
+        SearchService.shared.rebuildIndex(from: [fileURL])
+        let index = SearchService.shared.index
+        try assertEqual(index.count, 1)
+        let entry = index[0]
+        try assertEqual(entry.filename, "note1")
+        try assertEqual(entry.title, "我的笔记")
+        try assertEqual(entry.tags, ["swift", "ios"])
+        try assertEqual(entry.aliases, ["mynote", "alias-note"])
+    }
+
+    test("无 Frontmatter 的文件 title 回退为文件名") {
+        let fileURL = searchDir.appendingPathComponent("plain.md")
+        let content = "# 纯正文"
+        try! content.write(to: fileURL, atomically: true, encoding: .utf8)
+
+        SearchService.shared.rebuildIndex(from: [fileURL])
+        let index = SearchService.shared.index
+        try assertEqual(index.count, 1)
+        try assertEqual(index[0].title, "plain")
+        try assertTrue(index[0].tags.isEmpty)
+        try assertTrue(index[0].aliases.isEmpty)
+    }
+
+    test("tags 为字符串而非数组时正确解析") {
+        let fileURL = searchDir.appendingPathComponent("single_tag.md")
+        let content = """
+        ---
+        title: 单标签
+        tags: important
+        ---
+        正文
+        """
+        try! content.write(to: fileURL, atomically: true, encoding: .utf8)
+
+        SearchService.shared.rebuildIndex(from: [fileURL])
+        let index = SearchService.shared.index
+        try assertEqual(index.count, 1)
+        try assertEqual(index[0].tags, ["important"])
+    }
+}
+
+runSuite("SearchService - filter(query:) 四字段命中") {
+    let searchDir = tempDir.appendingPathComponent("filter-\(UUID().uuidString)")
+    try? FileManager.default.createDirectory(at: searchDir, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: searchDir) }
+
+    let file1 = searchDir.appendingPathComponent("swift-guide.md")
+    try! """
+    ---
+    title: Swift 入门指南
+    tags: [swift, programming]
+    aliases: [swiftintro]
+    ---
+    正文
+    """.write(to: file1, atomically: true, encoding: .utf8)
+
+    let file2 = searchDir.appendingPathComponent("design.md")
+    try! """
+    ---
+    title: 设计原则
+    tags: [design, ui]
+    aliases: [designprinciples]
+    ---
+    正文
+    """.write(to: file2, atomically: true, encoding: .utf8)
+
+    let file3 = searchDir.appendingPathComponent("untitled.md")
+    try! "# 无 frontmatter".write(to: file3, atomically: true, encoding: .utf8)
+
+    SearchService.shared.rebuildIndex(from: [file1, file2, file3])
+
+    test("按 filename 命中") {
+        let results = SearchService.shared.filter(query: "swift-guide")
+        try assertTrue(results.contains { $0.filename == "swift-guide" })
+    }
+
+    test("按 title 命中") {
+        let results = SearchService.shared.filter(query: "入门指南")
+        try assertTrue(results.contains { $0.filename == "swift-guide" })
+    }
+
+    test("按 tags 命中") {
+        let results = SearchService.shared.filter(query: "programming")
+        try assertTrue(results.contains { $0.filename == "swift-guide" })
+    }
+
+    test("按 aliases 命中") {
+        let results = SearchService.shared.filter(query: "swiftintro")
+        try assertTrue(results.contains { $0.filename == "swift-guide" })
+    }
+
+    test("大小写不敏感") {
+        let results = SearchService.shared.filter(query: "SWIFT-GUIDE")
+        try assertTrue(results.contains { $0.filename == "swift-guide" })
+    }
+
+    test("空查询返回全部") {
+        let results = SearchService.shared.filter(query: "")
+        try assertEqual(results.count, 3)
+    }
+}
+
+// ============================================================
+// MarkdownBlockClassifier Tests
+// ============================================================
+runSuite("MarkdownBlockClassifier - classify") {
+
+    test("Heading 分类为 .heading(level:text:)") {
+        let doc = Document(parsing: "## 标题文本")
+        let heading = doc.child(at: 0)!
+        let result = MarkdownBlockClassifier.classify(heading)
+        try assertEqual(result, .heading(level: 2, text: "标题文本"))
+    }
+
+    test("Paragraph 分类为 .paragraph") {
+        let doc = Document(parsing: "普通段落")
+        let para = doc.child(at: 0)!
+        let result = MarkdownBlockClassifier.classify(para)
+        try assertEqual(result, .paragraph)
+    }
+
+    test("UnorderedList 分类为 .unorderedList(depth: 0)") {
+        let doc = Document(parsing: "- 项一\n- 项二")
+        let list = doc.child(at: 0)!
+        let result = MarkdownBlockClassifier.classify(list)
+        try assertEqual(result, .unorderedList(depth: 0))
+    }
+
+    test("OrderedList 分类为 .orderedList(depth: 0)") {
+        let doc = Document(parsing: "1. 第一\n2. 第二")
+        let list = doc.child(at: 0)!
+        let result = MarkdownBlockClassifier.classify(list)
+        try assertEqual(result, .orderedList(depth: 0))
+    }
+
+    test("CodeBlock 分类为 .codeBlock 含 code 和 language") {
+        let doc = Document(parsing: "```swift\nlet x = 1\n```")
+        let codeBlock = doc.child(at: 0)!
+        let result = MarkdownBlockClassifier.classify(codeBlock)
+        try assertEqual(result, .codeBlock(CodeBlockData(code: "let x = 1\n", language: "swift")))
+    }
+
+    test("无语言标签的 CodeBlock language 为 plaintext") {
+        let doc = Document(parsing: "```\nplain code\n```")
+        let codeBlock = doc.child(at: 0)!
+        let result = MarkdownBlockClassifier.classify(codeBlock)
+        try assertEqual(result, .codeBlock(CodeBlockData(code: "plain code\n", language: "plaintext")))
+    }
+
+    test("BlockQuote 分类为 .blockquote(children:)") {
+        let doc = Document(parsing: "> 引用文本")
+        let blockquote = doc.child(at: 0)!
+        let result = MarkdownBlockClassifier.classify(blockquote)
+        if case let .blockquote(children) = result {
+            try assertEqual(children.count, 1)
+            try assertEqual(children[0], .paragraph)
+        } else {
+            throw TestFailure(message: "expected .blockquote, got \(result)")
+        }
+    }
+
+    test("ThematicBreak 分类为 .thematicBreak") {
+        let doc = Document(parsing: "文本\n\n---\n\n文本")
+        let thematicBreak = doc.child(at: 1)!
+        let result = MarkdownBlockClassifier.classify(thematicBreak)
+        try assertEqual(result, .thematicBreak)
+    }
+
+    test("Table 分类为 .table 含 headers 和 rows") {
+        let markdown = """
+        | 列1 | 列2 |
+        |-----|-----|
+        | a | b |
+        | c | d |
+        """
+        let doc = Document(parsing: markdown)
+        let table = doc.child(at: 0)!
+        let result = MarkdownBlockClassifier.classify(table)
+        if case let .table(data) = result {
+            try assertEqual(data.headers, ["列1", "列2"])
+            try assertEqual(data.rows, [["a", "b"], ["c", "d"]])
+        } else {
+            throw TestFailure(message: "expected .table, got \(result)")
+        }
+    }
+}
+
+runSuite("MarkdownBlockClassifier - listDepth") {
+
+    test("顶层列表深度为 0") {
+        let doc = Document(parsing: "- 项一")
+        let list = doc.child(at: 0)!
+        try assertEqual(MarkdownBlockClassifier.listDepth(list), 0)
+    }
+
+    test("嵌套列表深度为 1") {
+        let markdown = """
+        - 外层
+          - 内层
+        """
+        let doc = Document(parsing: markdown)
+        let outerList = doc.child(at: 0)! as! UnorderedList
+        let outerItem = outerList.children.compactMap { $0 as? ListItem }.first!
+        let innerList = outerItem.children.compactMap { $0 as? UnorderedList }.first!
+        try assertEqual(MarkdownBlockClassifier.listDepth(innerList), 1)
+    }
+
+    test("三层嵌套列表深度为 2") {
+        let markdown = """
+        - L1
+          - L2
+            - L3
+        """
+        let doc = Document(parsing: markdown)
+        let l1 = doc.child(at: 0)! as! UnorderedList
+        let l1Item = l1.children.compactMap { $0 as? ListItem }.first!
+        let l2 = l1Item.children.compactMap { $0 as? UnorderedList }.first!
+        let l2Item = l2.children.compactMap { $0 as? ListItem }.first!
+        let l3 = l2Item.children.compactMap { $0 as? UnorderedList }.first!
+        try assertEqual(MarkdownBlockClassifier.listDepth(l3), 2)
+    }
+}
+
+// ============================================================
+// LanguageNormalizer Tests
+// ============================================================
+runSuite("LanguageNormalizer - normalize") {
+
+    test("nil 返回 plaintext") {
+        try assertEqual(LanguageNormalizer.normalize(nil), "plaintext")
+    }
+
+    test("空字符串返回 plaintext") {
+        try assertEqual(LanguageNormalizer.normalize(""), "plaintext")
+    }
+
+    test("swift 原样返回") {
+        try assertEqual(LanguageNormalizer.normalize("swift"), "swift")
+    }
+
+    test("ts 别名映射为 typescript") {
+        try assertEqual(LanguageNormalizer.normalize("ts"), "typescript")
+    }
+
+    test("py 别名映射为 python") {
+        try assertEqual(LanguageNormalizer.normalize("py"), "python")
+    }
+
+    test("js 别名映射为 javascript") {
+        try assertEqual(LanguageNormalizer.normalize("js"), "javascript")
+    }
+
+    test("sh 别名映射为 bash") {
+        try assertEqual(LanguageNormalizer.normalize("sh"), "bash")
+    }
+
+    test("shell 别名映射为 bash") {
+        try assertEqual(LanguageNormalizer.normalize("shell"), "bash")
+    }
+
+    test("yml 别名映射为 yaml") {
+        try assertEqual(LanguageNormalizer.normalize("yml"), "yaml")
+    }
+
+    test("c++ 别名映射为 cpp") {
+        try assertEqual(LanguageNormalizer.normalize("c++"), "cpp")
+    }
+
+    test("c# 别名映射为 csharp") {
+        try assertEqual(LanguageNormalizer.normalize("c#"), "csharp")
+    }
+
+    test("objc 别名映射为 objectivec") {
+        try assertEqual(LanguageNormalizer.normalize("objc"), "objectivec")
+    }
+
+    test("大小写不敏感：SWIFT 映射为 swift") {
+        try assertEqual(LanguageNormalizer.normalize("SWIFT"), "swift")
+    }
+
+    test("未知语言返回 plaintext") {
+        try assertEqual(LanguageNormalizer.normalize("unknownlang"), "plaintext")
+    }
+}
+
+// ============================================================
 // Results Summary
 // ============================================================
 print("\n")

@@ -87,3 +87,30 @@ enum SyncError: LocalizedError {
         }
     }
 }
+
+// MARK: - Markdown Block Classification
+
+/// 代码块数据
+struct CodeBlockData: Equatable {
+    let code: String
+    let language: String  // 原始语言（小写），空则为 "plaintext"
+}
+
+/// 表格数据
+struct TableData: Equatable {
+    let headers: [String]
+    let rows: [[String]]
+}
+
+/// 块元素分类结果（用于驱动 SwiftUI 渲染分发）
+enum BlockElement: Equatable {
+    case heading(level: Int, text: String)
+    case paragraph
+    case unorderedList(depth: Int)
+    case orderedList(depth: Int)
+    case codeBlock(CodeBlockData)
+    case blockquote(children: [BlockElement])
+    case table(TableData)
+    case thematicBreak
+    case unknown
+}

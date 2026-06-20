@@ -11,7 +11,7 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-markdown.git", branch: "main"),
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
         .package(url: "https://github.com/kean/Nuke.git", from: "12.0.0"),
-        .package(url: "https://github.com/gonzalezreal/swift-markdown-ui.git", from: "2.0.0"),
+        .package(url: "https://github.com/raspu/Highlightr.git", from: "2.2.0"),
     ],
     targets: [
         .target(
@@ -21,7 +21,7 @@ let package = Package(
                 .product(name: "Markdown", package: "swift-markdown"),
                 .product(name: "Yams", package: "Yams"),
                 .product(name: "NukeUI", package: "Nuke"),
-                .product(name: "MarkdownUI", package: "swift-markdown-ui"),
+                .product(name: "Highlightr", package: "Highlightr"),
             ],
             path: "."
         )

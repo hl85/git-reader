@@ -16,3 +16,7 @@ typealias SwiftMarkdownStrong = Strong
 typealias SwiftMarkdownLink = Markdown.Link
 typealias SwiftMarkdownInlineCode = InlineCode
 typealias SwiftMarkdownImage = Markdown.Image
+typealias SwiftMarkdownBlockQuote = BlockQuote
+typealias SwiftMarkdownTable = Table
+typealias SwiftMarkdownThematicBreak = ThematicBreak
+typealias SwiftMarkdownListItem = ListItem

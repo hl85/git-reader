@@ -126,6 +126,15 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
             "fr": "Personal Access Token",
             "ko": "Personal Access Token"
         ],
+        "repo_branch": [
+            "en": "Branch",
+            "zh-Hans": "分支",
+            "zh-Hant": "分支",
+            "ja": "ブランチ",
+            "de": "Branch",
+            "fr": "Branche",
+            "ko": "브랜치"
+        ],
         "connecting": [
             "en": "Connecting...",
             "zh-Hans": "正在连接...",

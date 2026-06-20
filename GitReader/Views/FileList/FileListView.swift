@@ -469,13 +469,12 @@ struct FileListView: View {
     private var filteredFolders: [FolderNode] {
         var result = folders
 
-        // 1. 搜索过滤（仅搜索笔记名）
+        // 1. 搜索过滤（覆盖 filename/title/tags/aliases，由 SearchService 索引驱动）
         if !searchQuery.isEmpty {
-            let query = searchQuery.lowercased()
+            let matchedEntries = SearchService.shared.filter(query: searchQuery)
+            let matchedURLs = Set(matchedEntries.map { $0.fileURL })
             result = result.compactMap { folder in
-                let filtered = folder.children.filter {
-                    $0.name.lowercased().contains(query)
-                }
+                let filtered = folder.children.filter { matchedURLs.contains($0.url) }
                 guard !filtered.isEmpty else { return nil }
                 return FolderNode(name: folder.name, children: filtered)
             }
@@ -530,6 +529,7 @@ struct FileListView: View {
             let scanner = FileScannerService.shared
             let scannedFolders = scanner.scanDirectory()
             let index = scanner.buildNoteIndex()
+            SearchService.shared.rebuildIndex()
 
             DispatchQueue.main.async {
                 self.folders = scannedFolders

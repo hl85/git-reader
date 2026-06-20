@@ -14,7 +14,11 @@ final class SearchService: ObservableObject {
 
     /// 重建搜索索引（同步或切换仓库后调用）
     func rebuildIndex() {
-        let files = scanner.getAllMarkdownFiles()
+        rebuildIndex(from: scanner.getAllMarkdownFiles())
+    }
+
+    /// 从指定文件列表构建索引（支持测试注入，不依赖单例）
+    func rebuildIndex(from files: [URL]) {
         var entries: [SearchIndexEntry] = []
 
         for fileURL in files {

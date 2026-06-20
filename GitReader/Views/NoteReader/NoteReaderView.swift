@@ -1,6 +1,5 @@
 import SwiftUI
 import UIKit
-import MarkdownUI
 import NukeUI
 import Nuke
 import Yams
@@ -396,31 +395,6 @@ struct NoteReaderView: View {
         }
     }
 
-    // MARK: - Markdown Body
-
-    @ViewBuilder
-    private var markdownBody: some View {
-        if let document = markdownDocument {
-            // 使用 swift-markdown 的渲染
-            MarkdownRenderer(document: document, noteIndex: noteIndex) { noteName in
-                if let targetURL = noteIndex[noteName.lowercased()] {
-                    // 返回新的 NoteReaderView（由 NavigationStack 处理 Push）
-                    // 这里传递一个 NavigationLink 值
-                    return targetURL
-                } else {
-                    toastMessage = "未找到笔记 \"\(noteName)\""
-                    showToast = true
-                    return nil
-                }
-            }
-        } else {
-            Text(markdownString)
-                .font(.system(size: fontSize.bodyFontSize, design: .serif))
-                .lineSpacing(fontSize.lineSpacing)
-                .foregroundStyle(ClaudeColors.text)
-        }
-    }
-
     // MARK: - Actions
 
     private func loadNote() {
@@ -709,6 +683,15 @@ struct BlockView: View {
         case let codeBlock as SwiftMarkdownCodeBlock:
             CodeBlockView(codeBlock: codeBlock)
             
+        case let blockquote as SwiftMarkdownBlockQuote:
+            BlockQuoteView(blockquote: blockquote, noteIndex: noteIndex, onWikiLink: onWikiLink)
+            
+        case let table as SwiftMarkdownTable:
+            TableView(table: table)
+            
+        case is SwiftMarkdownThematicBreak:
+            ThematicBreakView()
+            
         default:
             Text(renderFallback(markup))
                 .font(.system(size: fontSize.bodyFontSize, design: .serif))
@@ -787,17 +770,15 @@ struct UnorderedListView: View {
     var fontSize: ReaderFontSize { ReaderFontSize(rawValue: fontSizeRaw) ?? .medium }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             ForEach(Array(list.listItems.enumerated()), id: \.offset) { _, item in
                 HStack(alignment: .top, spacing: 8) {
                     Text("•")
                         .font(.system(size: fontSize.bodyFontSize, design: .serif))
                         .foregroundStyle(ClaudeColors.textSecondary)
+                        .frame(width: 12)
                     
-                    Text(renderInlineChildren(item, noteIndex: noteIndex, onWikiLink: onWikiLink, fontSize: fontSize))
-                        .font(.system(size: fontSize.bodyFontSize, design: .serif))
-                        .lineSpacing(fontSize.lineSpacing)
-                        .foregroundStyle(ClaudeColors.text)
+                    ListItemContentView(item: item, noteIndex: noteIndex, onWikiLink: onWikiLink, fontSize: fontSize)
                 }
             }
         }
@@ -814,17 +795,15 @@ struct OrderedListView: View {
     var fontSize: ReaderFontSize { ReaderFontSize(rawValue: fontSizeRaw) ?? .medium }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             ForEach(Array(list.listItems.enumerated()), id: \.offset) { index, item in
                 HStack(alignment: .top, spacing: 8) {
                     Text("\(index + 1).")
                         .font(.system(size: fontSize.bodyFontSize, design: .serif))
                         .foregroundStyle(ClaudeColors.textSecondary)
+                        .frame(width: 20, alignment: .leading)
                     
-                    Text(renderInlineChildren(item, noteIndex: noteIndex, onWikiLink: onWikiLink, fontSize: fontSize))
-                        .font(.system(size: fontSize.bodyFontSize, design: .serif))
-                        .lineSpacing(fontSize.lineSpacing)
-                        .foregroundStyle(ClaudeColors.text)
+                    ListItemContentView(item: item, noteIndex: noteIndex, onWikiLink: onWikiLink, fontSize: fontSize)
                 }
             }
         }
@@ -832,19 +811,151 @@ struct OrderedListView: View {
     }
 }
 
-struct CodeBlockView: View {
-    let codeBlock: SwiftMarkdownCodeBlock
+/// 列表项内容：支持 inline 文本 + 嵌套子列表递归渲染
+struct ListItemContentView: View {
+    let item: SwiftMarkdownListItem
+    let noteIndex: [String: URL]
+    let onWikiLink: (String) -> URL?
+    let fontSize: ReaderFontSize
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            Text(codeBlock.code)
-                .font(.system(.caption, design: .monospaced))
-                .foregroundStyle(ClaudeColors.textSecondary)
-                .padding(12)
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(Array(item.children.enumerated()), id: \.offset) { _, child in
+                if let paragraph = child as? SwiftMarkdownParagraph {
+                    Text(renderInlineChildren(paragraph, noteIndex: noteIndex, onWikiLink: onWikiLink, fontSize: fontSize))
+                        .font(.system(size: fontSize.bodyFontSize, design: .serif))
+                        .lineSpacing(fontSize.lineSpacing)
+                        .foregroundStyle(ClaudeColors.text)
+                } else if let nestedList = child as? SwiftMarkdownUnorderedList {
+                    UnorderedListView(list: nestedList, noteIndex: noteIndex, onWikiLink: onWikiLink)
+                } else if let nestedList = child as? SwiftMarkdownOrderedList {
+                    OrderedListView(list: nestedList, noteIndex: noteIndex, onWikiLink: onWikiLink)
+                }
+            }
+        }
+    }
+}
+
+struct CodeBlockView: View {
+    let codeBlock: SwiftMarkdownCodeBlock
+    @State private var highlightedCode: AttributedString?
+
+    private static let highlighter = HighlightrCodeHighlighter()
+
+    private var normalizedLanguage: String {
+        LanguageNormalizer.normalize(codeBlock.language)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if codeBlock.language != nil {
+                Text(normalizedLanguage)
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(ClaudeColors.textMuted)
+                    .textCase(.uppercase)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(ClaudeColors.border.opacity(0.3))
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                if let highlighted = highlightedCode {
+                    Text(highlighted)
+                        .font(.system(.caption, design: .monospaced))
+                        .padding(12)
+                } else {
+                    Text(codeBlock.code)
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(ClaudeColors.textSecondary)
+                        .padding(12)
+                }
+            }
         }
         .background(ClaudeColors.tagBackground)
         .cornerRadius(8)
         .padding(.vertical, 4)
+        .task {
+            highlightedCode = Self.highlighter.highlight(code: codeBlock.code, language: normalizedLanguage)
+        }
+    }
+}
+
+struct BlockQuoteView: View {
+    let blockquote: SwiftMarkdownBlockQuote
+    let noteIndex: [String: URL]
+    let onWikiLink: (String) -> URL?
+
+    @AppStorage("readerFontSize") private var fontSizeRaw: String = ReaderFontSize.medium.rawValue
+    var fontSize: ReaderFontSize { ReaderFontSize(rawValue: fontSizeRaw) ?? .medium }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(Array(blockquote.children.enumerated()), id: \.offset) { _, child in
+                BlockView(markup: child, noteIndex: noteIndex, onWikiLink: onWikiLink)
+            }
+        }
+        .padding(.leading, 16)
+        .padding(.vertical, 4)
+        .overlay(alignment: .leading) {
+            Rectangle()
+                .fill(ClaudeColors.accent.opacity(0.4))
+                .frame(width: 3)
+        }
+    }
+}
+
+struct TableView: View {
+    let table: SwiftMarkdownTable
+
+    @AppStorage("readerFontSize") private var fontSizeRaw: String = ReaderFontSize.medium.rawValue
+    var fontSize: ReaderFontSize { ReaderFontSize(rawValue: fontSizeRaw) ?? .medium }
+
+    var body: some View {
+        let data = MarkdownBlockClassifier.extractTable(table)
+
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                ForEach(Array(data.headers.enumerated()), id: \.offset) { _, header in
+                    Text(header)
+                        .font(.system(size: fontSize.bodyFontSize, weight: .semibold, design: .serif))
+                        .foregroundStyle(ClaudeColors.text)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(10)
+                }
+            }
+            .background(ClaudeColors.tagBackground)
+
+            ForEach(Array(data.rows.enumerated()), id: \.offset) { _, row in
+                HStack(spacing: 0) {
+                    ForEach(Array(row.enumerated()), id: \.offset) { _, cell in
+                        Text(cell)
+                            .font(.system(size: fontSize.bodyFontSize, design: .serif))
+                            .foregroundStyle(ClaudeColors.text)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(10)
+                    }
+                }
+                .overlay(alignment: .top) {
+                    Rectangle().fill(ClaudeColors.border).frame(height: 0.5)
+                }
+            }
+        }
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(ClaudeColors.border, lineWidth: 0.5)
+        )
+        .cornerRadius(8)
+        .padding(.vertical, 4)
+    }
+}
+
+struct ThematicBreakView: View {
+    var body: some View {
+        Rectangle()
+            .fill(ClaudeColors.border)
+            .frame(height: 1)
+            .padding(.vertical, 8)
     }
 }
 
