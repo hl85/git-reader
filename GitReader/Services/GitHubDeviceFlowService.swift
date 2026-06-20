@@ -16,7 +16,7 @@ struct GitHubTokenResponse: Codable {
     let error_description: String?
 }
 
-final class GitHubDeviceFlowService: ObservableObject {
+final class GitHubDeviceFlowService: ObservableObject, @unchecked Sendable {
     static let shared = GitHubDeviceFlowService()
     
     // 这是一个占位 Client ID，实际开发中用户或开发者可以替换它

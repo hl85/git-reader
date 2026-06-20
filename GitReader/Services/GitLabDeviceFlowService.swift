@@ -17,7 +17,7 @@ struct GitLabTokenResponse: Codable {
     let error_description: String?
 }
 
-final class GitLabDeviceFlowService: ObservableObject {
+final class GitLabDeviceFlowService: ObservableObject, @unchecked Sendable {
     static let shared = GitLabDeviceFlowService()
     
     // 这是一个针对 gitlab.com 官方云端的占位 Client ID

@@ -27,7 +27,7 @@ targets:
     preBuildScripts:
       - name: "Auto Update Version & Build"
         shell: /bin/sh
-        alwaysRun: true
+        runOncePerArchitecture: false
         script: |
           # 确保在项目根目录下运行
           cd "$SRCROOT"

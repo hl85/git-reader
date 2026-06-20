@@ -1,6 +1,6 @@
 import Foundation
 
-final class AccountManager: ObservableObject {
+final class AccountManager: ObservableObject, @unchecked Sendable {
     static let shared = AccountManager()
     
     @Published var accounts: [AccountInfo] = [] {
