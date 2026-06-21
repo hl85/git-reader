@@ -6,6 +6,7 @@ struct SettingsView: View {
     @Binding var hasConfiguredRepo: Bool
     @Environment(\.dismiss) private var dismiss
     @StateObject private var localizationManager = LocalizationManager.shared
+    @AppStorage("appTheme") private var appTheme: String = AppTheme.system.rawValue
 
     @State private var showDisconnectAlert = false
     @State private var showToast = false
@@ -165,6 +166,33 @@ struct SettingsView: View {
                     }
                     .padding(.vertical, 4)
                 }
+            }
+
+            // 主题设置
+            Section {
+                HStack(spacing: 12) {
+                    Image(systemName: "paintpalette")
+                        .font(.system(size: 16))
+                        .foregroundStyle(ClaudeColors.textSecondary)
+                        .frame(width: 22)
+                    
+                    Text("theme".localized)
+                        .font(ClaudeTypography.bodyFont)
+                        .foregroundStyle(ClaudeColors.text)
+                    
+                    Spacer()
+                    
+                    Picker("", selection: $appTheme) {
+                        ForEach(AppTheme.allCases) { theme in
+                            Text(theme.displayName).tag(theme.rawValue)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(ClaudeColors.textSecondary)
+                }
+                .padding(.vertical, 4)
+            } header: {
+                sectionHeader("theme".localized)
             }
 
             // 语言设置

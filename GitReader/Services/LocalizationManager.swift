@@ -441,6 +441,42 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
             "fr": "Paramètres",
             "ko": "설정"
         ],
+        "theme": [
+            "en": "Theme",
+            "zh-Hans": "主题",
+            "zh-Hant": "主題",
+            "ja": "テーマ",
+            "de": "Thema",
+            "fr": "Thème",
+            "ko": "테마"
+        ],
+        "theme_system": [
+            "en": "Follow System",
+            "zh-Hans": "跟随系统",
+            "zh-Hant": "跟随系统",
+            "ja": "システムに従う",
+            "de": "System folgen",
+            "fr": "Suivre le système",
+            "ko": "시스템 설정"
+        ],
+        "theme_light": [
+            "en": "Light Mode",
+            "zh-Hans": "浅色模式",
+            "zh-Hant": "淺色模式",
+            "ja": "ライトモード",
+            "de": "Heller Modus",
+            "fr": "Mode clair",
+            "ko": "라이트 모드"
+        ],
+        "theme_dark": [
+            "en": "Dark Mode",
+            "zh-Hans": "暗色模式",
+            "zh-Hant": "暗色模式",
+            "ja": "ダークモード",
+            "de": "Dunkler Modus",
+            "fr": "Mode sombre",
+            "ko": "다크 모드"
+        ],
         "repo_info": [
             "en": "Repository Info",
             "zh-Hans": "仓库信息",

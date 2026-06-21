@@ -79,6 +79,7 @@ struct NoteReaderView: View {
     let noteIndex: [String: URL] // [笔记名(小写): .md 文件 URL]
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @AppStorage("readerFontSize") private var fontSizeRaw: String = ReaderFontSize.medium.rawValue
     @StateObject private var localizationManager = LocalizationManager.shared
     
@@ -141,14 +142,18 @@ struct NoteReaderView: View {
 
     var body: some View {
         ScrollView {
-            if isLoading {
-                skeletonView
-                    .transition(.opacity)
-            } else {
-                readerContent
-                    .transition(.opacity)
-                    .textSelection(.enabled) // 启用文本选择与拷贝
+            VStack {
+                if isLoading {
+                    skeletonView
+                        .transition(.opacity)
+                } else {
+                    readerContent
+                        .transition(.opacity)
+                        .textSelection(.enabled) // 启用文本选择与拷贝
+                }
             }
+            .frame(maxWidth: horizontalSizeClass == .regular ? 720 : .infinity)
+            .frame(maxWidth: .infinity, alignment: .top)
         }
         .background(ClaudeColors.background)
         .navigationTitle(noteTitle)

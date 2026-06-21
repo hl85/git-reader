@@ -75,3 +75,28 @@ extension Color {
         })
     }
 }
+
+/// App 主题模式
+enum AppTheme: String, CaseIterable, Identifiable {
+    case system
+    case light
+    case dark
+    
+    var id: String { self.rawValue }
+    
+    var displayName: String {
+        switch self {
+        case .system: return "theme_system".localized
+        case .light: return "theme_light".localized
+        case .dark: return "theme_dark".localized
+        }
+    }
+    
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+}

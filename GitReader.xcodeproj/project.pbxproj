@@ -34,7 +34,6 @@
 		A6366A0448C3910F328F8887 /* NoteReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB28F52C696F104FDFC23828 /* NoteReaderView.swift */; };
 		B000317367AE44BCBF3C646B /* GitLib in Frameworks */ = {isa = PBXBuildFile; productRef = BA2CFB2F57D6E49765778694 /* GitLib */; };
 		B0D05A6F64F858F7C4AA620C /* MainContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29CCC4F02B03BCA6E4B4081D /* MainContainerView.swift */; };
-		B6FCC898EC85864302AE0E7E /* TouchTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABDD6C1DD2904DE450A2669 /* TouchTracer.swift */; };
 		C3C042057BB29E2AF87FD3B3 /* FileScannerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C17CC63FA18ED89EFDC59EA /* FileScannerService.swift */; };
 		C3C16E6B2B83D6484A1B5269 /* PropertyTemplateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDF5CF6AD64E7B763584DA90 /* PropertyTemplateManager.swift */; };
 		C4A5802786B1C6BE9B7B90BE /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E52F5E84639D9832083863D /* SidebarView.swift */; };
@@ -76,7 +75,6 @@
 		728F9E347DEF93F235D240C0 /* ClaudeTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeTypography.swift; sourceTree = "<group>"; };
 		7484F7A019289C5329C28944 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		77DA7CB71232DBFC1B161E51 /* GitReader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GitReader.entitlements; sourceTree = "<group>"; };
-		7ABDD6C1DD2904DE450A2669 /* TouchTracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchTracer.swift; sourceTree = "<group>"; };
 		7FD205FDD534662E0A75490F /* SwiftMarkdownTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftMarkdownTypes.swift; sourceTree = "<group>"; };
 		838881D28E3F2F38EE5705F6 /* AddRepositoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddRepositoryView.swift; sourceTree = "<group>"; };
 		94EA604C3F185046EAAE0623 /* swift-libgit2-local */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "swift-libgit2-local"; path = "LocalPackages/swift-libgit2-local"; sourceTree = SOURCE_ROOT; };
@@ -165,7 +163,6 @@
 			isa = PBXGroup;
 			children = (
 				CBF0E05B1035D81629FED9E7 /* Components.swift */,
-				7ABDD6C1DD2904DE450A2669 /* TouchTracer.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -429,7 +426,6 @@
 				166127A0A403DBE6DD3DA605 /* SplashView.swift in Sources */,
 				D1A821D103FC6197C0F86186 /* SplashWrapperView.swift in Sources */,
 				A09C88140B3CFE463361EA05 /* SwiftMarkdownTypes.swift in Sources */,
-				B6FCC898EC85864302AE0E7E /* TouchTracer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

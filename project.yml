@@ -82,6 +82,10 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         ITSAppUsesNonExemptEncryption: false
         LSApplicationCategoryType: public.app-category.developer-tools
+        UIBackgroundModes:
+          - fetch
+        BGTaskSchedulerPermittedIdentifiers:
+          - com.holooapp.gitsreader.background_sync
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.holooapp.gitsreader
