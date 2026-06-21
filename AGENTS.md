@@ -25,12 +25,22 @@
 
 ### 构建与测试
 
+默认测试与构建设备配置：
+* **iPad 模拟器**：`iPad Pro 13-inch (M5)` (iOS 26.5)
+* **iPhone 模拟器**：`iPhone 17 Pro` (iOS 26.5)
+
 ```bash
-# 构建
+# 构建 (macOS)
 xcodebuild build -scheme GitReader -destination 'platform=macOS' -quiet
 
+# 构建 (iPad 模拟器)
+xcodebuild build -scheme GitReader -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M5),OS=26.5' -quiet
+
+# 构建 (iPhone 模拟器)
+xcodebuild build -scheme GitReader -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' -quiet
+
 # 测试（如有 Test Target）
-xcodebuild test -scheme GitReader -destination 'platform=macOS' -quiet
+xcodebuild test -scheme GitReader -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' -quiet
 
 # 生成项目（修改 project.yml 后必须执行）
 xcodegen generate
