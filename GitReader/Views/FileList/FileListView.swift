@@ -181,15 +181,6 @@ struct FileListView: View {
                                 .animation(syncState == .syncing ? .linear(duration: 1.5).repeatForever(autoreverses: false) : .default, value: syncState)
                         }
                         .disabled(syncState == .syncing)
-
-                        // 设置按钮
-                        NavigationLink(destination: SettingsView(
-                            hasConfiguredRepo: $hasConfiguredRepo
-                        )) {
-                            Image(systemName: "gearshape")
-                                .font(.system(size: 16))
-                                .foregroundStyle(ClaudeColors.textSecondary)
-                        }
                     }
                 }
             }

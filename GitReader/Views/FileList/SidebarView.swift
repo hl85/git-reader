@@ -5,6 +5,7 @@ struct SidebarView: View {
     @StateObject private var accountManager = AccountManager.shared
     @Binding var showAddRepoSheet: Bool
     @Binding var showAccountManagementSheet: Bool
+    @Binding var showSettingsSheet: Bool
     
     @State private var isAccountsExpanded = false
     
@@ -74,6 +75,16 @@ struct SidebarView: View {
             }
             
             Spacer()
+            
+            // 设置按钮
+            sidebarTile(
+                icon: "gearshape",
+                helpText: "settings".localized
+            ) {
+                print("[SidebarView] Clicked settings button")
+                showSettingsSheet = true
+            }
+            .padding(.bottom, 16) // 留出底部安全区域
         }
         .frame(width: 80)
         .background(ClaudeColors.cardBackground)

@@ -10,6 +10,7 @@
 * **规则**：所有 Target、依赖、Build Phases、Build Settings 均声明在 `project.yml` 中。
 * **禁止**：手动修改 `GitReader.xcodeproj` 或 `project.pbxproj`——下次 `xcodegen generate` 会**完全覆盖**。
 * **正确做法**：修改 `project.yml` → 运行 `xcodegen generate`。
+* **新增/删除/重命名文件**：在 `GitReader/` 下创建、删除或重命名任何文件/目录后，**必须立即运行 `xcodegen generate`**，否则 Xcode 无法识别新文件，会导致 `Cannot find '...' in scope` 编译错误。
 
 ### 2. 版本号全自动管理，禁止硬编码
 * Build 号 = Git 总提交数；Version 号 = 最新 Git Tag（无 Tag 则 `0.1.2`）。

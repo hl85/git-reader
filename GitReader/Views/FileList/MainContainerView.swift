@@ -7,55 +7,42 @@ struct MainContainerView: View {
     
     @State private var showAddRepoSheet = false
     @State private var showAccountManagementSheet = false
+    @State private var showSettingsSheet = false
     @State private var showiPhoneSidebar = false
-    @State private var showPadSidebar = true
     @State private var selectedFile: FileItem?
     @State private var noteIndex: [String: URL] = [:]
-    @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
+    @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
     
     var body: some View {
         Group {
             if horizontalSizeClass == .regular {
-                // iPad / macOS: 使用 HStack + NavigationSplitView 双栏布局
+                // iPad / macOS: 使用标准的 HStack + NavigationSplitView 三栏布局，并指定 zIndex 确保完美的层级遮罩与平滑动画
                 HStack(spacing: 0) {
-                    if showPadSidebar {
-                        // 最左侧：仓库切换侧边栏（宽度 80）
-                        SidebarView(
-                            showAddRepoSheet: $showAddRepoSheet,
-                            showAccountManagementSheet: $showAccountManagementSheet
-                        )
-                        .transition(.move(edge: .leading))
-                        
-                        Divider()
-                            .background(ClaudeColors.border)
-                    }
+                    // 最左侧：仓库切换侧边栏（宽度 80）(最高层，zIndex 2)
+                    SidebarView(
+                        showAddRepoSheet: $showAddRepoSheet,
+                        showAccountManagementSheet: $showAccountManagementSheet,
+                        showSettingsSheet: $showSettingsSheet
+                    )
+                    .zIndex(2)
+                    
+                    Divider()
+                        .background(ClaudeColors.border)
+                        .zIndex(2)
                     
                     // 右侧：标准的双栏 NavigationSplitView
-                    NavigationSplitView {
-                        // 第一栏：文件列表
-                        NavigationStack {
-                            FileListView(
-                                hasConfiguredRepo: $hasConfiguredRepo,
-                                selectedFile: $selectedFile,
-                                noteIndex: $noteIndex
-                            )
-                            .toolbar {
-                                ToolbarItem(placement: .navigationBarLeading) {
-                                    Button(action: {
-                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                            showPadSidebar.toggle()
-                                        }
-                                    }) {
-                                        Image(systemName: "sidebar.left")
-                                            .foregroundStyle(ClaudeColors.textSecondary)
-                                    }
-                                }
-                            }
-                        }
+                    NavigationSplitView(columnVisibility: $columnVisibility) {
+                        // 第一栏：文件列表 (中等层，zIndex 1)
+                        FileListView(
+                            hasConfiguredRepo: $hasConfiguredRepo,
+                            selectedFile: $selectedFile,
+                            noteIndex: $noteIndex
+                        )
+                        .zIndex(1)
                         .navigationSplitViewColumnWidth(min: 250, ideal: 300, max: 400)
                     } detail: {
-                        // 第二栏：内容阅读区
-                        NavigationStack {
+                        // 第二栏：内容阅读区 (最低层，zIndex 0)
+                        Group {
                             if let file = selectedFile {
                                 NoteReaderView(
                                     fileURL: file.url,
@@ -66,7 +53,9 @@ struct MainContainerView: View {
                                 DetailPlaceholderView()
                             }
                         }
+                        .zIndex(0)
                     }
+                    .zIndex(0)
                 }
             } else {
                 // iPhone: 使用双栏或抽屉布局
@@ -104,7 +93,8 @@ struct MainContainerView: View {
                         
                         SidebarView(
                             showAddRepoSheet: $showAddRepoSheet,
-                            showAccountManagementSheet: $showAccountManagementSheet
+                            showAccountManagementSheet: $showAccountManagementSheet,
+                            showSettingsSheet: $showSettingsSheet
                         )
                         .frame(width: 80)
                         .background(ClaudeColors.cardBackground)
@@ -121,6 +111,11 @@ struct MainContainerView: View {
         }
         .sheet(isPresented: $showAccountManagementSheet) {
             AccountManagementView()
+        }
+        .sheet(isPresented: $showSettingsSheet) {
+            NavigationStack {
+                SettingsView(hasConfiguredRepo: $hasConfiguredRepo)
+            }
         }
         .onChange(of: syncService.activeRepositoryID) { _, _ in
             // 切换仓库时，自动收起 iPhone 侧边栏

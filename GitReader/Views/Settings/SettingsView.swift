@@ -4,6 +4,7 @@ import SwiftUI
 /// 显示仓库信息、同步触发、断开连接
 struct SettingsView: View {
     @Binding var hasConfiguredRepo: Bool
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var localizationManager = LocalizationManager.shared
 
     @State private var showDisconnectAlert = false
@@ -218,6 +219,15 @@ struct SettingsView: View {
         .background(ClaudeColors.background)
         .navigationTitle("settings".localized)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("done".localized) {
+                    dismiss()
+                }
+                .font(ClaudeTypography.bodyFont.weight(.semibold))
+                .foregroundStyle(ClaudeColors.text)
+            }
+        }
         .alert("disconnect_repo".localized, isPresented: $showDisconnectAlert) {
             Button("cancel".localized, role: .cancel) {}
             Button("disconnect".localized, role: .destructive) {
