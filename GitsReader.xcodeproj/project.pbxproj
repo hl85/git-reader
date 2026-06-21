@@ -442,7 +442,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GitsReader/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Gits Reader";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -465,7 +465,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GitsReader/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Gits Reader";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (

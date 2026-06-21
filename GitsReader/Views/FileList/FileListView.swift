@@ -10,6 +10,7 @@ struct FileListView: View {
     @Binding var hasConfiguredRepo: Bool
     @Binding var selectedFile: FileItem?
     @Binding var noteIndex: [String: URL]
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @StateObject private var localizationManager = LocalizationManager.shared
 
     @State private var folders: [FolderNode] = []
@@ -365,7 +366,7 @@ struct FileListView: View {
         Section {
             if isExpanded {
                 ForEach(filesInFolder(folder)) { file in
-                    if UIDevice.current.userInterfaceIdiom == .pad {
+                    if horizontalSizeClass == .regular {
                         fileRow(file)
                             .listRowBackground(selectedFile == file ? ClaudeColors.tagBackground.opacity(0.5) : ClaudeColors.background)
                             .listRowSeparator(.hidden)

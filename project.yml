@@ -81,7 +81,7 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         ITSAppUsesNonExemptEncryption: false
-        LSApplicationCategoryType: public.app-category.developer-tools
+        LSApplicationCategoryType: public.app-category.lifestyle
         UIBackgroundModes:
           - fetch
         BGTaskSchedulerPermittedIdentifiers:
@@ -95,7 +95,7 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_CFBundleDisplayName: Gits Reader
-        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
     dependencies:
       - package: GitLib
         product: GitLib
