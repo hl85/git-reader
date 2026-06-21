@@ -2,47 +2,69 @@ import SwiftUI
 
 struct MainContainerView: View {
     @Binding var hasConfiguredRepo: Bool
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @StateObject private var syncService = GitSyncService.shared
     
     @State private var showAddRepoSheet = false
     @State private var showAccountManagementSheet = false
     @State private var showiPhoneSidebar = false
+    @State private var showPadSidebar = true
     @State private var selectedFile: FileItem?
     @State private var noteIndex: [String: URL] = [:]
+    @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     
     var body: some View {
         Group {
-            if UIDevice.current.userInterfaceIdiom == .pad {
-                // iPad / macOS: 使用 NavigationSplitView 三栏布局
-                NavigationSplitView {
-                    // 第一栏：仓库切换侧边栏
-                    SidebarView(
-                        showAddRepoSheet: $showAddRepoSheet,
-                        showAccountManagementSheet: $showAccountManagementSheet
-                    )
-                    .navigationSplitViewColumnWidth(80)
-                    .toolbar(.hidden, for: .navigationBar)
-                } content: {
-                    // 第二栏：文件列表
-                    NavigationStack {
-                        FileListView(
-                            hasConfiguredRepo: $hasConfiguredRepo,
-                            selectedFile: $selectedFile,
-                            noteIndex: $noteIndex
+            if horizontalSizeClass == .regular {
+                // iPad / macOS: 使用 HStack + NavigationSplitView 双栏布局
+                HStack(spacing: 0) {
+                    if showPadSidebar {
+                        // 最左侧：仓库切换侧边栏（宽度 80）
+                        SidebarView(
+                            showAddRepoSheet: $showAddRepoSheet,
+                            showAccountManagementSheet: $showAccountManagementSheet
                         )
+                        .transition(.move(edge: .leading))
+                        
+                        Divider()
+                            .background(ClaudeColors.border)
                     }
-                    .navigationSplitViewColumnWidth(min: 250, ideal: 300, max: 400)
-                } detail: {
-                    // 第三栏：内容阅读区（NavigationSplitView 已提供导航上下文）
-                    NavigationStack {
-                        if let file = selectedFile {
-                            NoteReaderView(
-                                fileURL: file.url,
-                                noteIndex: noteIndex
+                    
+                    // 右侧：标准的双栏 NavigationSplitView
+                    NavigationSplitView {
+                        // 第一栏：文件列表
+                        NavigationStack {
+                            FileListView(
+                                hasConfiguredRepo: $hasConfiguredRepo,
+                                selectedFile: $selectedFile,
+                                noteIndex: $noteIndex
                             )
-                            .id(file.id)
-                        } else {
-                            DetailPlaceholderView()
+                            .toolbar {
+                                ToolbarItem(placement: .navigationBarLeading) {
+                                    Button(action: {
+                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                            showPadSidebar.toggle()
+                                        }
+                                    }) {
+                                        Image(systemName: "sidebar.left")
+                                            .foregroundStyle(ClaudeColors.textSecondary)
+                                    }
+                                }
+                            }
+                        }
+                        .navigationSplitViewColumnWidth(min: 250, ideal: 300, max: 400)
+                    } detail: {
+                        // 第二栏：内容阅读区
+                        NavigationStack {
+                            if let file = selectedFile {
+                                NoteReaderView(
+                                    fileURL: file.url,
+                                    noteIndex: noteIndex
+                                )
+                                .id(file.id)
+                            } else {
+                                DetailPlaceholderView()
+                            }
                         }
                     }
                 }

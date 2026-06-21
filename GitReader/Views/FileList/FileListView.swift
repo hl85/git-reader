@@ -375,14 +375,13 @@ struct FileListView: View {
             if isExpanded {
                 ForEach(filesInFolder(folder)) { file in
                     if UIDevice.current.userInterfaceIdiom == .pad {
-                        Button(action: {
-                            selectedFile = file
-                        }) {
-                            fileRow(file)
-                        }
-                        .buttonStyle(.plain)
-                        .listRowBackground(selectedFile == file ? ClaudeColors.tagBackground.opacity(0.5) : ClaudeColors.background)
-                        .listRowSeparator(.hidden)
+                        fileRow(file)
+                            .listRowBackground(selectedFile == file ? ClaudeColors.tagBackground.opacity(0.5) : ClaudeColors.background)
+                            .listRowSeparator(.hidden)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selectedFile = file
+                            }
                     } else {
                         NavigationLink(value: file) {
                             fileRow(file)

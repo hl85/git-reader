@@ -838,6 +838,7 @@ struct ListItemContentView: View {
 
 struct CodeBlockView: View {
     let codeBlock: SwiftMarkdownCodeBlock
+    @Environment(\.colorScheme) private var colorScheme
     @State private var highlightedCode: AttributedString?
 
     private static let highlighter = HighlightrCodeHighlighter()
@@ -875,8 +876,9 @@ struct CodeBlockView: View {
         .background(ClaudeColors.tagBackground)
         .cornerRadius(8)
         .padding(.vertical, 4)
-        .task {
-            highlightedCode = Self.highlighter.highlight(code: codeBlock.code, language: normalizedLanguage)
+        .task(id: colorScheme) {
+            let theme: CodeHighlightTheme = colorScheme == .dark ? .dark : .light
+            highlightedCode = Self.highlighter.highlight(code: codeBlock.code, language: normalizedLanguage, theme: theme)
         }
     }
 }

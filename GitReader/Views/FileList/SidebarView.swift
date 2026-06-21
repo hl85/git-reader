@@ -75,7 +75,7 @@ struct SidebarView: View {
             
             Spacer()
         }
-        .frame(maxWidth: .infinity)
+        .frame(width: 80)
         .background(ClaudeColors.cardBackground)
     }
     
