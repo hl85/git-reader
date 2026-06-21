@@ -136,7 +136,7 @@ final class GitHubDeviceFlowService: ObservableObject, @unchecked Sendable {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
-        request.setValue("GitReader-App", forHTTPHeaderField: "User-Agent")
+        request.setValue("GitsReader-App", forHTTPHeaderField: "User-Agent")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -162,7 +162,7 @@ final class GitHubDeviceFlowService: ObservableObject, @unchecked Sendable {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
-        request.setValue("GitReader-App", forHTTPHeaderField: "User-Agent")
+        request.setValue("GitsReader-App", forHTTPHeaderField: "User-Agent")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -187,7 +187,7 @@ final class GitHubDeviceFlowService: ObservableObject, @unchecked Sendable {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
-        request.setValue("GitReader-App", forHTTPHeaderField: "User-Agent")
+        request.setValue("GitsReader-App", forHTTPHeaderField: "User-Agent")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {

@@ -90,7 +90,7 @@
 		CB28F52C696F104FDFC23828 /* NoteReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteReaderView.swift; sourceTree = "<group>"; };
 		CBF0E05B1035D81629FED9E7 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		DDF5CF6AD64E7B763584DA90 /* PropertyTemplateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyTemplateManager.swift; sourceTree = "<group>"; };
-		E206F040C60BF378B432C38C /* GitsReader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GitsReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E206F040C60BF378B432C38C /* GitReader.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GitReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E4245829E796C2FCAF2D5A43 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		EC41CA657A4059679DF88D92 /* AccountManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountManager.swift; sourceTree = "<group>"; };
 		ED4FBE3A6329D1938F0C34AB /* AccountManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountManagementView.swift; sourceTree = "<group>"; };
@@ -233,7 +233,7 @@
 		D8C82687E351E3109AAEDA11 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				E206F040C60BF378B432C38C /* GitsReader.app */,
+				E206F040C60BF378B432C38C /* GitReader.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -291,9 +291,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C302668F593AFE8217C0E317 /* GitsReader */ = {
+		C302668F593AFE8217C0E317 /* GitReader */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C36675DB798E2A068274D898 /* Build configuration list for PBXNativeTarget "GitsReader" */;
+			buildConfigurationList = C36675DB798E2A068274D898 /* Build configuration list for PBXNativeTarget "GitReader" */;
 			buildPhases = (
 				99F0EBE8B5CB26A034887C5A /* Auto Update Version & Build */,
 				4929A3CB90771DE4F99CA2CA /* Sources */,
@@ -304,7 +304,7 @@
 			);
 			dependencies = (
 			);
-			name = GitsReader;
+			name = GitReader;
 			packageProductDependencies = (
 				BA2CFB2F57D6E49765778694 /* GitLib */,
 				D4E11E6D0B2AF9A0F2DC49C7 /* Markdown */,
@@ -313,7 +313,7 @@
 				EEF1871D00654CDE76A0FCC3 /* Highlightr */,
 			);
 			productName = GitReader;
-			productReference = E206F040C60BF378B432C38C /* GitsReader.app */;
+			productReference = E206F040C60BF378B432C38C /* GitReader.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -323,7 +323,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2650;
+				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					C302668F593AFE8217C0E317 = {
 						DevelopmentTeam = "";
@@ -331,7 +331,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 935A98E19708B36D4C5BF159 /* Build configuration list for PBXProject "GitsReader" */;
+			buildConfigurationList = 935A98E19708B36D4C5BF159 /* Build configuration list for PBXProject "GitReader" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -352,7 +352,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				C302668F593AFE8217C0E317 /* GitsReader */,
+				C302668F593AFE8217C0E317 /* GitReader */,
 			);
 		};
 /* End PBXProject section */
@@ -445,6 +445,8 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GitReader/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Gits Reader";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -466,6 +468,8 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GitReader/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Gits Reader";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -482,7 +486,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -540,7 +543,6 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
@@ -551,7 +553,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -602,7 +603,6 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 6.0;
@@ -612,7 +612,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		935A98E19708B36D4C5BF159 /* Build configuration list for PBXProject "GitsReader" */ = {
+		935A98E19708B36D4C5BF159 /* Build configuration list for PBXProject "GitReader" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				93D1C734F072C81446431A5E /* Debug */,
@@ -621,7 +621,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		C36675DB798E2A068274D898 /* Build configuration list for PBXNativeTarget "GitsReader" */ = {
+		C36675DB798E2A068274D898 /* Build configuration list for PBXNativeTarget "GitReader" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0D49B382C729D37AD5AA922C /* Debug */,

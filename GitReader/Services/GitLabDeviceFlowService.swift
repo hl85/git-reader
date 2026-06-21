@@ -150,7 +150,7 @@ final class GitLabDeviceFlowService: ObservableObject, @unchecked Sendable {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("GitReader-App", forHTTPHeaderField: "User-Agent")
+        request.setValue("GitsReader-App", forHTTPHeaderField: "User-Agent")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -175,7 +175,7 @@ final class GitLabDeviceFlowService: ObservableObject, @unchecked Sendable {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("GitReader-App", forHTTPHeaderField: "User-Agent")
+        request.setValue("GitsReader-App", forHTTPHeaderField: "User-Agent")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -199,7 +199,7 @@ final class GitLabDeviceFlowService: ObservableObject, @unchecked Sendable {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("GitReader-App", forHTTPHeaderField: "User-Agent")
+        request.setValue("GitsReader-App", forHTTPHeaderField: "User-Agent")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
