@@ -82,6 +82,10 @@ struct AddRepositoryView: View {
     @State private var isCloning = false
     @State private var cloneErrorMessage: String? = nil
     
+    // 自定义下拉列表展开状态（替代 Picker，避免 iPad sheet 内 popover 冲突）
+    @State private var showRepoDropdown = false
+    @State private var showBranchDropdown = false
+    
     private var isFormValid: Bool {
         if selectedAccountID == nil {
             return !repoURL.trimmingCharacters(in: .whitespaces).isEmpty &&
@@ -388,19 +392,69 @@ struct AddRepositoryView: View {
                                         .font(ClaudeTypography.captionFont)
                                         .foregroundStyle(ClaudeColors.accent)
                                 } else {
-                                    HStack {
-                                        Text("select_repo".localized)
-                                            .font(ClaudeTypography.bodyFont)
-                                            .foregroundStyle(ClaudeColors.text)
-                                        Spacer()
-                                        Picker("", selection: $selectedRepo) {
-                                            Text("please_select".localized).tag(nil as UnifiedRepo?)
-                                            ForEach(repos) { repo in
-                                                Text(repo.fullName).tag(repo as UnifiedRepo?)
+                                    // 仓库选择（自定义下拉列表）
+                                    VStack(spacing: 0) {
+                                        Button(action: {
+                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                                showRepoDropdown.toggle()
+                                                showBranchDropdown = false
                                             }
+                                        }) {
+                                            HStack {
+                                                Text("select_repo".localized)
+                                                    .font(ClaudeTypography.bodyFont)
+                                                    .foregroundStyle(ClaudeColors.text)
+                                                Spacer()
+                                                Text(selectedRepo?.fullName ?? "please_select".localized)
+                                                    .font(ClaudeTypography.bodyFont)
+                                                    .foregroundStyle(selectedRepo != nil ? ClaudeColors.link : ClaudeColors.textMuted)
+                                                    .lineLimit(1)
+                                                    .truncationMode(.tail)
+                                                Image(systemName: showRepoDropdown ? "chevron.up" : "chevron.down")
+                                                    .font(.system(size: 12))
+                                                    .foregroundStyle(ClaudeColors.textMuted)
+                                            }
+                                            .contentShape(Rectangle())
+                                            .padding(.vertical, 4)
                                         }
-                                        .pickerStyle(.menu)
-                                        .labelsHidden()
+                                        .buttonStyle(.plain)
+                                        
+                                        if showRepoDropdown {
+                                            Divider()
+                                                .background(ClaudeColors.border)
+                                                .padding(.vertical, 6)
+                                            
+                                            ScrollView {
+                                                VStack(spacing: 0) {
+                                                    ForEach(repos) { repo in
+                                                        Button(action: {
+                                                            selectedRepo = repo
+                                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                                                showRepoDropdown = false
+                                                            }
+                                                        }) {
+                                                            HStack {
+                                                                Text(repo.fullName)
+                                                                    .font(ClaudeTypography.bodyFont)
+                                                                    .foregroundStyle(ClaudeColors.text)
+                                                                    .lineLimit(1)
+                                                                    .truncationMode(.tail)
+                                                                Spacer()
+                                                                if selectedRepo == repo {
+                                                                    Image(systemName: "checkmark")
+                                                                        .font(.system(size: 12, weight: .bold))
+                                                                        .foregroundStyle(ClaudeColors.accent)
+                                                                }
+                                                            }
+                                                            .padding(.vertical, 10)
+                                                            .contentShape(Rectangle())
+                                                        }
+                                                        .buttonStyle(.plain)
+                                                    }
+                                                }
+                                            }
+                                            .frame(maxHeight: 240)
+                                        }
                                     }
                                 }
                                 
@@ -421,21 +475,65 @@ struct AddRepositoryView: View {
                                             .font(ClaudeTypography.captionFont)
                                             .foregroundStyle(ClaudeColors.accent)
                                     } else {
-                                        HStack {
-                                            Text("select_branch".localized)
-                                                .font(ClaudeTypography.bodyFont)
-                                                .foregroundStyle(ClaudeColors.text)
-                                            Spacer()
-                                            Picker("", selection: $selectedBranch) {
-                                                if branches.isEmpty {
-                                                    Text("please_select".localized).tag("")
+                                        // 分支选择（自定义下拉列表）
+                                        VStack(spacing: 0) {
+                                            Button(action: {
+                                                withAnimation(.easeInOut(duration: 0.2)) {
+                                                    showBranchDropdown.toggle()
+                                                    showRepoDropdown = false
                                                 }
-                                                ForEach(branches, id: \.self) { branchName in
-                                                    Text(branchName).tag(branchName)
+                                            }) {
+                                                HStack {
+                                                    Text("select_branch".localized)
+                                                        .font(ClaudeTypography.bodyFont)
+                                                        .foregroundStyle(ClaudeColors.text)
+                                                    Spacer()
+                                                    Text(selectedBranch.isEmpty ? "please_select".localized : selectedBranch)
+                                                        .font(ClaudeTypography.bodyFont)
+                                                        .foregroundStyle(!selectedBranch.isEmpty ? ClaudeColors.link : ClaudeColors.textMuted)
+                                                    Image(systemName: showBranchDropdown ? "chevron.up" : "chevron.down")
+                                                        .font(.system(size: 12))
+                                                        .foregroundStyle(ClaudeColors.textMuted)
                                                 }
+                                                .contentShape(Rectangle())
+                                                .padding(.vertical, 4)
                                             }
-                                            .pickerStyle(.menu)
-                                            .labelsHidden()
+                                            .buttonStyle(.plain)
+                                            
+                                            if showBranchDropdown {
+                                                Divider()
+                                                    .background(ClaudeColors.border)
+                                                    .padding(.vertical, 6)
+                                                
+                                                ScrollView {
+                                                    VStack(spacing: 0) {
+                                                        ForEach(branches, id: \.self) { branchName in
+                                                            Button(action: {
+                                                                selectedBranch = branchName
+                                                                withAnimation(.easeInOut(duration: 0.2)) {
+                                                                    showBranchDropdown = false
+                                                                }
+                                                            }) {
+                                                                HStack {
+                                                                    Text(branchName)
+                                                                        .font(ClaudeTypography.bodyFont)
+                                                                        .foregroundStyle(ClaudeColors.text)
+                                                                    Spacer()
+                                                                    if selectedBranch == branchName {
+                                                                        Image(systemName: "checkmark")
+                                                                            .font(.system(size: 12, weight: .bold))
+                                                                            .foregroundStyle(ClaudeColors.accent)
+                                                                    }
+                                                                }
+                                                                .padding(.vertical, 10)
+                                                                .contentShape(Rectangle())
+                                                            }
+                                                            .buttonStyle(.plain)
+                                                        }
+                                                    }
+                                                }
+                                                .frame(maxHeight: 200)
+                                            }
                                         }
                                     }
                                 }

@@ -21,6 +21,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
     static let shared = GitSyncService()
 
     /// 更新仓库列表并持久化
+    @MainActor
     func setRepositories(_ list: [RepositoryInfo]) {
         repositories = list
         if let data = try? JSONEncoder().encode(list) {
@@ -29,6 +30,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
     }
 
     /// 更新当前激活仓库并持久化，同时通知非 SwiftUI 服务刷新
+    @MainActor
     func setActiveRepository(_ id: UUID?) {
         activeRepositoryID = id
         UserDefaults.standard.set(id?.uuidString, forKey: "activeRepositoryID")
@@ -49,7 +51,9 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
                 var list = repositories
                 if let index = list.firstIndex(where: { $0.id == activeID }) {
                     list[index].url = newValue
-                    setRepositories(list)
+                    Task { @MainActor in
+                        setRepositories(list)
+                    }
                 }
             }
         }
@@ -63,7 +67,9 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
                 var list = repositories
                 if let index = list.firstIndex(where: { $0.id == activeID }) {
                     list[index].branch = newValue
-                    setRepositories(list)
+                    Task { @MainActor in
+                        setRepositories(list)
+                    }
                 }
             }
         }
@@ -116,6 +122,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
     }
 
     /// 重置所有状态（断开连接时调用）
+    @MainActor
     func reset() {
         guard let activeID = activeRepositoryID else { return }
 
@@ -133,9 +140,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         setActiveRepository(repositories.first?.id)
 
         // 重置同步状态
-        Task { @MainActor in
-            syncState = .idle
-        }
+        syncState = .idle
     }
 
     /// 沙盒文档目录（Git 仓库根目录）
@@ -199,10 +204,10 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
             
             var list = repositories
             list.append(newRepo)
-            setRepositories(list)
+            await setRepositories(list)
 
             // 设为当前激活仓库
-            setActiveRepository(tempID)
+            await setActiveRepository(tempID)
 
             print("[GitSyncService] clone API successful")
             await updateState(.success)

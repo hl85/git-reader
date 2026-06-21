@@ -8,6 +8,8 @@ import SwiftUI
 /// - 设置入口
 struct FileListView: View {
     @Binding var hasConfiguredRepo: Bool
+    @Binding var selectedFile: FileItem?
+    @Binding var noteIndex: [String: URL]
     @StateObject private var localizationManager = LocalizationManager.shared
 
     @State private var folders: [FolderNode] = []
@@ -16,7 +18,6 @@ struct FileListView: View {
     @State private var isOffline = false
     @State private var showToast = false
     @State private var toastMessage = ""
-    @State private var noteIndex: [String: URL] = [:]
     @State private var isLoading = true
     @State private var repoName = ""
     @State private var cloneError: String? = nil
@@ -27,8 +28,7 @@ struct FileListView: View {
     @State private var showStatusPopover = false
 
     var body: some View {
-        NavigationStack {
-            ZStack(alignment: .topLeading) {
+        ZStack(alignment: .topLeading) {
                 VStack(spacing: 0) {
                     // 离线横幅
                     if isOffline {
@@ -206,7 +206,6 @@ struct FileListView: View {
                 print("[FileListView] Received activeRepositoryDidChange notification, reloading files...")
                 loadFiles()
             }
-        }
     }
 
     // MARK: - Search Bar
@@ -375,11 +374,22 @@ struct FileListView: View {
         Section {
             if isExpanded {
                 ForEach(filesInFolder(folder)) { file in
-                    NavigationLink(value: file) {
-                        fileRow(file)
+                    if UIDevice.current.userInterfaceIdiom == .pad {
+                        Button(action: {
+                            selectedFile = file
+                        }) {
+                            fileRow(file)
+                        }
+                        .buttonStyle(.plain)
+                        .listRowBackground(selectedFile == file ? ClaudeColors.tagBackground.opacity(0.5) : ClaudeColors.background)
+                        .listRowSeparator(.hidden)
+                    } else {
+                        NavigationLink(value: file) {
+                            fileRow(file)
+                        }
+                        .listRowBackground(ClaudeColors.background)
+                        .listRowSeparator(.hidden)
                     }
-                    .listRowBackground(ClaudeColors.background)
-                    .listRowSeparator(.hidden)
                 }
             }
         } header: {
@@ -652,7 +662,11 @@ extension FileItem: Hashable {
 }
 
 #Preview {
-    FileListView(hasConfiguredRepo: .constant(true))
+    FileListView(
+        hasConfiguredRepo: .constant(true),
+        selectedFile: .constant(nil),
+        noteIndex: .constant([:])
+    )
 }
 
 /// 流式布局（Flow Layout）

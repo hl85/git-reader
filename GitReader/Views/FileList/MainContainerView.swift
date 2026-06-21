@@ -7,6 +7,8 @@ struct MainContainerView: View {
     @State private var showAddRepoSheet = false
     @State private var showAccountManagementSheet = false
     @State private var showiPhoneSidebar = false
+    @State private var selectedFile: FileItem?
+    @State private var noteIndex: [String: URL] = [:]
     
     var body: some View {
         Group {
@@ -19,22 +21,38 @@ struct MainContainerView: View {
                         showAccountManagementSheet: $showAccountManagementSheet
                     )
                     .navigationSplitViewColumnWidth(80)
-                    .navigationBarHidden(true)
+                    .toolbar(.hidden, for: .navigationBar)
                 } content: {
                     // 第二栏：文件列表
-                    FileListView(hasConfiguredRepo: $hasConfiguredRepo)
-                        .navigationSplitViewColumnWidth(min: 250, ideal: 300, max: 400)
+                    FileListView(
+                        hasConfiguredRepo: $hasConfiguredRepo,
+                        selectedFile: $selectedFile,
+                        noteIndex: $noteIndex
+                    )
+                    .navigationSplitViewColumnWidth(min: 250, ideal: 300, max: 400)
                 } detail: {
-                    // 第三栏：内容阅读区（默认展示空状态）
-                    DetailPlaceholderView()
+                    // 第三栏：内容阅读区（NavigationSplitView 已提供导航上下文）
+                    if let file = selectedFile {
+                        NoteReaderView(
+                            fileURL: file.url,
+                            noteIndex: noteIndex
+                        )
+                        .id(file.id)
+                    } else {
+                        DetailPlaceholderView()
+                    }
                 }
             } else {
                 // iPhone: 使用双栏或抽屉布局
                 ZStack(alignment: .leading) {
                     // 主内容区
                     NavigationStack {
-                        FileListView(hasConfiguredRepo: $hasConfiguredRepo)
-                            .toolbar {
+                        FileListView(
+                            hasConfiguredRepo: $hasConfiguredRepo,
+                            selectedFile: $selectedFile,
+                            noteIndex: $noteIndex
+                        )
+                        .toolbar {
                                 ToolbarItem(placement: .navigationBarLeading) {
                                     Button(action: {
                                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
