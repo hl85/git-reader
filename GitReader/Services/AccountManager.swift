@@ -54,6 +54,7 @@ final class AccountManager: ObservableObject, @unchecked Sendable {
     }
     
     /// 移除账号，并清理 Keychain 中的 Token
+    @MainActor
     func removeAccount(id: UUID) {
         accounts.removeAll { $0.id == id }
         KeychainService.shared.deleteToken(forAccountID: id)
