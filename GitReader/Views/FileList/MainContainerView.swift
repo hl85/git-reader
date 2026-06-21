@@ -24,22 +24,26 @@ struct MainContainerView: View {
                     .toolbar(.hidden, for: .navigationBar)
                 } content: {
                     // 第二栏：文件列表
-                    FileListView(
-                        hasConfiguredRepo: $hasConfiguredRepo,
-                        selectedFile: $selectedFile,
-                        noteIndex: $noteIndex
-                    )
+                    NavigationStack {
+                        FileListView(
+                            hasConfiguredRepo: $hasConfiguredRepo,
+                            selectedFile: $selectedFile,
+                            noteIndex: $noteIndex
+                        )
+                    }
                     .navigationSplitViewColumnWidth(min: 250, ideal: 300, max: 400)
                 } detail: {
                     // 第三栏：内容阅读区（NavigationSplitView 已提供导航上下文）
-                    if let file = selectedFile {
-                        NoteReaderView(
-                            fileURL: file.url,
-                            noteIndex: noteIndex
-                        )
-                        .id(file.id)
-                    } else {
-                        DetailPlaceholderView()
+                    NavigationStack {
+                        if let file = selectedFile {
+                            NoteReaderView(
+                                fileURL: file.url,
+                                noteIndex: noteIndex
+                            )
+                            .id(file.id)
+                        } else {
+                            DetailPlaceholderView()
+                        }
                     }
                 }
             } else {
