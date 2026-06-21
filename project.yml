@@ -81,7 +81,7 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         ITSAppUsesNonExemptEncryption: false
-        LSApplicationCategoryType: public.app-category.lifestyle
+        LSApplicationCategoryType: public.app-category.developer-tools
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.holooapp.gitsreader
@@ -90,6 +90,8 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Gits Reader
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
     dependencies:
       - package: GitLib
         product: GitLib
