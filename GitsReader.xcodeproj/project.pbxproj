@@ -34,6 +34,7 @@
 		A6366A0448C3910F328F8887 /* NoteReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB28F52C696F104FDFC23828 /* NoteReaderView.swift */; };
 		B000317367AE44BCBF3C646B /* GitLib in Frameworks */ = {isa = PBXBuildFile; productRef = BA2CFB2F57D6E49765778694 /* GitLib */; };
 		B0D05A6F64F858F7C4AA620C /* MainContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29CCC4F02B03BCA6E4B4081D /* MainContainerView.swift */; };
+		B6FCC898EC85864302AE0E7E /* TouchTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABDD6C1DD2904DE450A2669 /* TouchTracer.swift */; };
 		C3C042057BB29E2AF87FD3B3 /* FileScannerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C17CC63FA18ED89EFDC59EA /* FileScannerService.swift */; };
 		C3C16E6B2B83D6484A1B5269 /* PropertyTemplateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDF5CF6AD64E7B763584DA90 /* PropertyTemplateManager.swift */; };
 		C4A5802786B1C6BE9B7B90BE /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E52F5E84639D9832083863D /* SidebarView.swift */; };
@@ -75,6 +76,7 @@
 		728F9E347DEF93F235D240C0 /* ClaudeTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeTypography.swift; sourceTree = "<group>"; };
 		7484F7A019289C5329C28944 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		77DA7CB71232DBFC1B161E51 /* GitReader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GitReader.entitlements; sourceTree = "<group>"; };
+		7ABDD6C1DD2904DE450A2669 /* TouchTracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchTracer.swift; sourceTree = "<group>"; };
 		7FD205FDD534662E0A75490F /* SwiftMarkdownTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftMarkdownTypes.swift; sourceTree = "<group>"; };
 		838881D28E3F2F38EE5705F6 /* AddRepositoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddRepositoryView.swift; sourceTree = "<group>"; };
 		94EA604C3F185046EAAE0623 /* swift-libgit2-local */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "swift-libgit2-local"; path = "LocalPackages/swift-libgit2-local"; sourceTree = SOURCE_ROOT; };
@@ -88,7 +90,7 @@
 		CB28F52C696F104FDFC23828 /* NoteReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteReaderView.swift; sourceTree = "<group>"; };
 		CBF0E05B1035D81629FED9E7 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		DDF5CF6AD64E7B763584DA90 /* PropertyTemplateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyTemplateManager.swift; sourceTree = "<group>"; };
-		E206F040C60BF378B432C38C /* GitReader.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GitReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E206F040C60BF378B432C38C /* GitsReader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GitsReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E4245829E796C2FCAF2D5A43 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		EC41CA657A4059679DF88D92 /* AccountManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountManager.swift; sourceTree = "<group>"; };
 		ED4FBE3A6329D1938F0C34AB /* AccountManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountManagementView.swift; sourceTree = "<group>"; };
@@ -163,6 +165,7 @@
 			isa = PBXGroup;
 			children = (
 				CBF0E05B1035D81629FED9E7 /* Components.swift */,
+				7ABDD6C1DD2904DE450A2669 /* TouchTracer.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -230,7 +233,7 @@
 		D8C82687E351E3109AAEDA11 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				E206F040C60BF378B432C38C /* GitReader.app */,
+				E206F040C60BF378B432C38C /* GitsReader.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -288,9 +291,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C302668F593AFE8217C0E317 /* GitReader */ = {
+		C302668F593AFE8217C0E317 /* GitsReader */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C36675DB798E2A068274D898 /* Build configuration list for PBXNativeTarget "GitReader" */;
+			buildConfigurationList = C36675DB798E2A068274D898 /* Build configuration list for PBXNativeTarget "GitsReader" */;
 			buildPhases = (
 				99F0EBE8B5CB26A034887C5A /* Auto Update Version & Build */,
 				4929A3CB90771DE4F99CA2CA /* Sources */,
@@ -301,7 +304,7 @@
 			);
 			dependencies = (
 			);
-			name = GitReader;
+			name = GitsReader;
 			packageProductDependencies = (
 				BA2CFB2F57D6E49765778694 /* GitLib */,
 				D4E11E6D0B2AF9A0F2DC49C7 /* Markdown */,
@@ -310,7 +313,7 @@
 				EEF1871D00654CDE76A0FCC3 /* Highlightr */,
 			);
 			productName = GitReader;
-			productReference = E206F040C60BF378B432C38C /* GitReader.app */;
+			productReference = E206F040C60BF378B432C38C /* GitsReader.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -349,7 +352,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				C302668F593AFE8217C0E317 /* GitReader */,
+				C302668F593AFE8217C0E317 /* GitsReader */,
 			);
 		};
 /* End PBXProject section */
@@ -426,6 +429,7 @@
 				166127A0A403DBE6DD3DA605 /* SplashView.swift in Sources */,
 				D1A821D103FC6197C0F86186 /* SplashWrapperView.swift in Sources */,
 				A09C88140B3CFE463361EA05 /* SwiftMarkdownTypes.swift in Sources */,
+				B6FCC898EC85864302AE0E7E /* TouchTracer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -447,7 +451,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.gitreader.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.holooapp.gitsreader;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -468,7 +472,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.gitreader.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.holooapp.gitsreader;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -613,7 +617,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		C36675DB798E2A068274D898 /* Build configuration list for PBXNativeTarget "GitReader" */ = {
+		C36675DB798E2A068274D898 /* Build configuration list for PBXNativeTarget "GitsReader" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0D49B382C729D37AD5AA922C /* Debug */,
