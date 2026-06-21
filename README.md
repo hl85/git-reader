@@ -99,7 +99,7 @@ git-reader/
 ├── Docs/                          # 产品与技术设计文档
 ├── Prototype/                     # HTML 交互原型
 ├── Appstore/                      # 应用商店资源（截图、logo、发布指南）
-├── GitReader/                     # iOS 工程
+├── GitsReader/                     # iOS 工程
 │   ├── App/                       # 应用入口 + 路由
 │   ├── Models/                    # 数据模型（NoteContent, RepoConfig, GitModels）
 │   ├── Services/                  # Git 同步 / 文件扫描 / 搜索 / Keychain / OAuth / 本地化 / 网络监控 / 属性模板
@@ -113,11 +113,11 @@ git-reader/
 │   │   ├── Settings/              # 设置 + 账号管理 + 属性模板设置
 │   │   └── Components/            # 共享组件（Toast、OfflineBanner、EmptyState）
 │   ├── Resources/                 # 资源文件（图标、本地化）
-│   ├── GitReader.entitlements     # 权限配置
+│   ├── GitsReader.entitlements     # 权限配置
 │   └── Info.plist
 └── TestPackage/                   # 单元测试包（自定义 SPM 测试框架）
     ├── Package.swift
-    ├── Sources/TestableGitReader/ # 被测模块拷贝 + 桩（11 个镜像文件）
+    ├── Sources/TestableGitsReader/ # 被测模块拷贝 + 桩（11 个镜像文件）
     └── Sources/TestRunner/        # 自定义测试运行器（33 套件，131 用例）
 ```
 
@@ -135,7 +135,7 @@ git-reader/
    ```bash
    xcodegen generate
    ```
-2. 用 Xcode 打开 `GitReader.xcodeproj`
+2. 用 Xcode 打开 `GitsReader.xcodeproj`
 3. 选择 iOS 模拟器（推荐 `iPhone 17 Pro` 或 `iPad Pro 13-inch (M5)`），按 `Cmd+R` 运行
 
 ### 配置
@@ -157,9 +157,9 @@ Token 将安全存储于 iOS Keychain。
 ### 工作原理
 
 1. 每次在 Xcode 中编译（Build/Archive）时，会自动触发 `Auto Update Version & Build` 脚本。
-2. 脚本计算最新的版本号和构建号，并写入 `GitReader/Version.xcconfig` 配置文件。
+2. 脚本计算最新的版本号和构建号，并写入 `GitsReader/Version.xcconfig` 配置文件。
 3. Xcode 项目的 Build Settings 已经与该 `.xcconfig` 关联，从而动态更新 App 的版本信息。
-4. `GitReader/Version.xcconfig` 已加入 `.gitignore`，**绝对不会污染 Git 工作区**。
+4. `GitsReader/Version.xcconfig` 已加入 `.gitignore`，**绝对不会污染 Git 工作区**。
 
 ### 如何发布新版本
 

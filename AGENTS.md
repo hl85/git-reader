@@ -1,4 +1,4 @@
-# GitReader AI Agent 开发指南 (AGENTS.md)
+# GitsReader AI Agent 开发指南 (AGENTS.md)
 
 本项目是一个 iOS Swift 应用，使用 **XcodeGen** 管理 Xcode 项目，依赖本地 `swift-libgit2` 进行 Git 仓库读取。
 
@@ -8,13 +8,13 @@
 
 ### 1. XcodeGen 是项目结构的唯一真理源
 * **规则**：所有 Target、依赖、Build Phases、Build Settings 均声明在 `project.yml` 中。
-* **禁止**：手动修改 `GitReader.xcodeproj` 或 `project.pbxproj`——下次 `xcodegen generate` 会**完全覆盖**。
+* **禁止**：手动修改 `GitsReader.xcodeproj` 或 `project.pbxproj`——下次 `xcodegen generate` 会**完全覆盖**。
 * **正确做法**：修改 `project.yml` → 运行 `xcodegen generate`。
-* **新增/删除/重命名文件**：在 `GitReader/` 下创建、删除或重命名任何文件/目录后，**必须立即运行 `xcodegen generate`**，否则 Xcode 无法识别新文件，会导致 `Cannot find '...' in scope` 编译错误。
+* **新增/删除/重命名文件**：在 `GitsReader/` 下创建、删除或重命名任何文件/目录后，**必须立即运行 `xcodegen generate`**，否则 Xcode 无法识别新文件，会导致 `Cannot find '...' in scope` 编译错误。
 
 ### 2. 版本号全自动管理，禁止硬编码
 * Build 号 = Git 总提交数；Version 号 = 最新 Git Tag（无 Tag 则 `0.1.2`）。
-* 由 Pre-Build Script 自动生成 `GitReader/Version.xcconfig`（已 gitignore）。
+* 由 Pre-Build Script 自动生成 `GitsReader/Version.xcconfig`（已 gitignore）。
 * **禁止**：在 `project.yml` 或 Xcode 中硬编码 `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION`。
 
 ### 3. 本地 Swift 包约束
@@ -43,9 +43,9 @@
 * 路径型链接 `[[folder/note]]` 取最后一段匹配（`components(separatedBy: "/").last`）。
 
 ### 7. 测试用 TestPackage 自定义框架，非 XCTest
-* 测试代码位于 `TestPackage/`，通过 `TestableGitReader` 镜像模块 + `TestRunner` 运行，**不使用 XCTest**。
+* 测试代码位于 `TestPackage/`，通过 `TestableGitsReader` 镜像模块 + `TestRunner` 运行，**不使用 XCTest**。
 * 运行测试：`cd TestPackage && swift run TestRunner`
-* **双写约束**：修改 `GitReader/` 下可测试逻辑（解析/分类/匹配/语言规范化等纯函数或协议）时，**必须同步更新** `TestPackage/Sources/TestableGitReader/` 中的镜像副本，否则测试编译失败。
+* **双写约束**：修改 `GitsReader/` 下可测试逻辑（解析/分类/匹配/语言规范化等纯函数或协议）时，**必须同步更新** `TestPackage/Sources/TestableGitsReader/` 中的镜像副本，否则测试编译失败。
 * 依赖注入：可测试方法应提供接受参数注入的重载（如 `rebuildIndex(from:)`、`scanDirectory(at:)`），不依赖单例。
 
 ---
@@ -60,10 +60,10 @@
 
 ```bash
 # 构建 (iPad 模拟器)
-xcodebuild build -scheme GitReader -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M5),OS=26.5' -quiet
+xcodebuild build -scheme GitsReader -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M5),OS=26.5' -quiet
 
 # 构建 (iPhone 模拟器)
-xcodebuild build -scheme GitReader -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' -quiet
+xcodebuild build -scheme GitsReader -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' -quiet
 
 # 测试（自定义 SPM 测试框架，非 xcodebuild test）
 cd TestPackage && swift run TestRunner
@@ -73,7 +73,7 @@ xcodegen generate
 ```
 
 ### 添加新文件或目录
-在 `GitReader/` 下创建文件后直接运行 `xcodegen generate`，XcodeGen 自动扫描并更新项目。
+在 `GitsReader/` 下创建文件后直接运行 `xcodegen generate`，XcodeGen 自动扫描并更新项目。
 
 ### 修改项目配置或新增依赖
 1. 编辑 `project.yml`（参考 [XcodeGen ProjectSpec](https://github.com/yonaskolb/XcodeGen/blob/master/Docs/ProjectSpec.md)）。
@@ -84,7 +84,7 @@ xcodegen generate
 ## 📁 项目结构概览
 
 ```
-GitReader/
+GitsReader/
 ├── App/            # 应用入口、路由
 ├── Views/          # SwiftUI 视图（Splash/RepoConfig/FileList/NoteReader/Settings/Components）
 ├── Models/         # 数据模型（NoteContent, RepoConfig, GitModels）
@@ -94,7 +94,7 @@ GitReader/
 ├── Resources/      # 资源文件（图标、本地化）
 project.yml         # ← XcodeGen 配置，项目结构的唯一真理源
 LocalPackages/      # 本地 Swift 包（swift-libgit2）
-TestPackage/        # 自定义 SPM 测试框架（TestableGitReader 镜像 + TestRunner）
+TestPackage/        # 自定义 SPM 测试框架（TestableGitsReader 镜像 + TestRunner）
 ```
 
 ---

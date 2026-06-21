@@ -1,7 +1,7 @@
 import Foundation
 import Markdown
 import Yams
-@testable import TestableGitReader
+@testable import TestableGitsReader
 
 // MARK: - Test Utilities
 

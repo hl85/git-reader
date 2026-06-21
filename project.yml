@@ -1,4 +1,4 @@
-name: GitReader
+name: GitsReader
 
 options:
   bundleIdPrefix: com.holooapp
@@ -17,13 +17,13 @@ settings:
     CODE_SIGN_STYLE: Automatic
 
 targets:
-  GitReader:
+  GitsReader:
     type: application
     platform: iOS
     deploymentTarget: "17.0"
     configFiles:
-      Debug: GitReader/Version.xcconfig
-      Release: GitReader/Version.xcconfig
+      Debug: GitsReader/Version.xcconfig
+      Release: GitsReader/Version.xcconfig
     preBuildScripts:
       - name: "Auto Update Version & Build"
         shell: /bin/sh
@@ -48,7 +48,7 @@ targets:
           fi
 
           # 3. 将结果写入 Version.xcconfig
-          cat << EOF > GitReader/Version.xcconfig
+          cat << EOF > GitsReader/Version.xcconfig
           // 自动生成的文件，请勿手动修改，且需加入 .gitignore
           MARKETING_VERSION = $marketing_version
           CURRENT_PROJECT_VERSION = $git_commit_count
@@ -56,14 +56,14 @@ targets:
 
           echo "Updated Version.xcconfig: Version=$marketing_version, Build=$git_commit_count"
     sources:
-      - path: GitReader
+      - path: GitsReader
         excludes:
           - "**/.build/**"
           - "**/Package.swift"
           - "**/*.md"
         createIntermediateGroups: true
     info:
-      path: GitReader/Info.plist
+      path: GitsReader/Info.plist
       properties:
         CFBundleDisplayName: Gits Reader
         CFBundleShortVersionString: $(MARKETING_VERSION)
@@ -127,10 +127,10 @@ packages:
     from: 2.2.0
 
 schemes:
-  GitReader:
+  GitsReader:
     build:
       targets:
-        GitReader: all
+        GitsReader: all
     run:
       config: Debug
     test:

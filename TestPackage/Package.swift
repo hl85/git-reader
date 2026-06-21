@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "TestableGitReader",
+    name: "TestableGitsReader",
     platforms: [
         .macOS(.v13)
     ],
@@ -12,17 +12,17 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "TestableGitReader",
+            name: "TestableGitsReader",
             dependencies: [
                 .product(name: "Markdown", package: "swift-markdown"),
                 .product(name: "Yams", package: "Yams"),
             ],
-            path: "Sources/TestableGitReader"
+            path: "Sources/TestableGitsReader"
         ),
         .executableTarget(
             name: "TestRunner",
             dependencies: [
-                "TestableGitReader",
+                "TestableGitsReader",
                 .product(name: "Markdown", package: "swift-markdown"),
                 .product(name: "Yams", package: "Yams"),
             ],

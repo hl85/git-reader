@@ -1,6 +1,6 @@
 # Gits Reader 产品与技术设计文档 (PDD/TDD)
 
-> 本文档是 GitReader 项目的唯一设计真理源，整合了产品方案、技术架构、实现细节与演进规划。
+> 本文档是 GitsReader 项目的唯一设计真理源，整合了产品方案、技术架构、实现细节与演进规划。
 
 ---
 
@@ -41,7 +41,7 @@
 
 #### 闪屏动画："书卷与墨水" (The Ink & Scroll)
 
-* **核心创意**：极简线条如墨水般绘制出 Git 分支（书脊），随后平滑展开成一本书的轮廓（书卷），最后淡入 Serif 字体的 "GitReader" 标题。
+* **核心创意**：极简线条如墨水般绘制出 Git 分支（书脊），随后平滑展开成一本书的轮廓（书卷），最后淡入 Serif 字体的 "GitsReader" 标题。
 * **色彩适配**：
   * Light Mode：背景 `#FBFBFA`，书卷线条 `#1A1A1A`，书脊与节点 `#D97757`（橘红色）
   * Dark Mode：背景 `#101010`，书卷线条 `#E8E8E4`，书脊与节点 `#D97757`
@@ -364,7 +364,7 @@ enum BlockElement {
 ```
 TestPackage/
 ├── Sources/
-│   ├── TestableGitReader/     # app 代码的 macOS 可编译副本（镜像）
+│   ├── TestableGitsReader/     # app 代码的 macOS 可编译副本（镜像）
 │   │   ├── SearchService.swift
 │   │   ├── FileScannerService.swift
 │   │   ├── KeychainService.swift
@@ -382,7 +382,7 @@ TestPackage/
 
 #### TDD 策略
 
-* **双写约束**：可测试逻辑（解析/分类/匹配/语言规范化）抽成纯函数或协议，双写到 `TestableGitReader` 镜像用自定义断言验证；SwiftUI 渲染部分手动验证。
+* **双写约束**：可测试逻辑（解析/分类/匹配/语言规范化）抽成纯函数或协议，双写到 `TestableGitsReader` 镜像用自定义断言验证；SwiftUI 渲染部分手动验证。
 * **Red-Green-Refactor**：先写失败测试，再写最小实现，最后重构。
 * **依赖注入**：`SearchService.rebuildIndex(from:)`、`FileScannerService.scanDirectory(at:)` 等重载方法接受参数注入，不依赖单例。
 * **测试运行**：`cd TestPackage && swift run`
@@ -640,7 +640,7 @@ P3 (已交付)
 | 图片处理 | 沙盒本地文件 + 内存缓存（Nuke） |
 | Markdown 渲染 | 自定义 BlockView（swift-markdown AST → BlockElement 枚举 → SwiftUI），非 textual/MarkdownUI |
 | 代码高亮 | Highlightr (highlight.js) + LanguageNormalizer 别名规范化 |
-| 测试架构 | 自定义 SPM 测试框架（TestPackage + TestableGitReader 镜像 + TestRunner），非 XCTest |
+| 测试架构 | 自定义 SPM 测试框架（TestPackage + TestableGitsReader 镜像 + TestRunner），非 XCTest |
 | TDD 策略 | 可测试逻辑抽纯函数/协议，双写到镜像；UI 手动验证 |
 | 多仓库隔离 | UUID 目录隔离 (Documents/repositories/{UUID}/) |
 | 多账号隔离 | Keychain Account = AccountInfo.id.uuidString |

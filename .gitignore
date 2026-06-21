@@ -102,7 +102,7 @@ Carthage/Build/
 # Local configuration file (properties, secrets, etc)
 local.properties
 Version.xcconfig
-GitReader/Version.xcconfig
+GitsReader/Version.xcconfig
 
 # AI Agent files
 .superpowers/

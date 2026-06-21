@@ -2,7 +2,7 @@ import SwiftUI
 import BackgroundTasks
 
 @main
-struct GitReaderApp: App {
+struct GitsReaderApp: App {
     @State private var hasConfiguredRepo: Bool = false
     @AppStorage("appTheme") private var appTheme: String = AppTheme.system.rawValue
 
