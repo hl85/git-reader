@@ -12,6 +12,7 @@ struct MainContainerView: View {
     @State private var selectedFile: FileItem?
     @State private var noteIndex: [String: URL] = [:]
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
+    @State private var navigationPath = NavigationPath()
     
     var body: some View {
         Group {
@@ -36,7 +37,8 @@ struct MainContainerView: View {
                         FileListView(
                             hasConfiguredRepo: $hasConfiguredRepo,
                             selectedFile: $selectedFile,
-                            noteIndex: $noteIndex
+                            noteIndex: $noteIndex,
+                            isSplitView: true
                         )
                         .zIndex(1)
                         .navigationSplitViewColumnWidth(min: 250, ideal: 300, max: 400)
@@ -61,11 +63,12 @@ struct MainContainerView: View {
                 // iPhone: 使用双栏或抽屉布局
                 ZStack(alignment: .leading) {
                     // 主内容区
-                    NavigationStack {
+                    NavigationStack(path: $navigationPath) {
                         FileListView(
                             hasConfiguredRepo: $hasConfiguredRepo,
                             selectedFile: $selectedFile,
-                            noteIndex: $noteIndex
+                            noteIndex: $noteIndex,
+                            isSplitView: false
                         )
                         .toolbar {
                                 ToolbarItem(placement: .navigationBarLeading) {
@@ -121,6 +124,29 @@ struct MainContainerView: View {
             // 切换仓库时，自动收起 iPhone 侧边栏
             withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                 showiPhoneSidebar = false
+            }
+        }
+        .onChange(of: selectedFile) { _, newFile in
+            if horizontalSizeClass == .compact {
+                if let file = newFile {
+                    navigationPath = NavigationPath([file])
+                } else {
+                    navigationPath = NavigationPath()
+                }
+            }
+        }
+        .onChange(of: navigationPath) { _, newPath in
+            if newPath.isEmpty {
+                selectedFile = nil
+            }
+        }
+        .onChange(of: horizontalSizeClass) { _, newClass in
+            if newClass == .compact {
+                if let file = selectedFile {
+                    navigationPath = NavigationPath([file])
+                } else {
+                    navigationPath = NavigationPath()
+                }
             }
         }
     }

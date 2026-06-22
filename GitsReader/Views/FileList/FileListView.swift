@@ -10,7 +10,7 @@ struct FileListView: View {
     @Binding var hasConfiguredRepo: Bool
     @Binding var selectedFile: FileItem?
     @Binding var noteIndex: [String: URL]
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    let isSplitView: Bool
     @StateObject private var localizationManager = LocalizationManager.shared
 
     @State private var folders: [FolderNode] = []
@@ -366,7 +366,7 @@ struct FileListView: View {
         Section {
             if isExpanded {
                 ForEach(filesInFolder(folder)) { file in
-                    if horizontalSizeClass == .regular {
+                    if isSplitView {
                         fileRow(file)
                             .listRowBackground(selectedFile == file ? ClaudeColors.tagBackground.opacity(0.5) : ClaudeColors.background)
                             .listRowSeparator(.hidden)
@@ -378,6 +378,9 @@ struct FileListView: View {
                         NavigationLink(value: file) {
                             fileRow(file)
                         }
+                        .simultaneousGesture(TapGesture().onEnded {
+                            selectedFile = file
+                        })
                         .listRowBackground(ClaudeColors.background)
                         .listRowSeparator(.hidden)
                     }
@@ -656,7 +659,8 @@ extension FileItem: Hashable {
     FileListView(
         hasConfiguredRepo: .constant(true),
         selectedFile: .constant(nil),
-        noteIndex: .constant([:])
+        noteIndex: .constant([:]),
+        isSplitView: false
     )
 }
 
