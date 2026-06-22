@@ -77,6 +77,7 @@ enum ReaderFontSize: String, CaseIterable, Identifiable {
 struct NoteReaderView: View {
     let fileURL: URL
     let noteIndex: [String: URL] // [笔记名(小写): .md 文件 URL]
+    @Binding var selectedFile: FileItem?
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -95,7 +96,6 @@ struct NoteReaderView: View {
     @State private var showToast = false
     @State private var toastMessage = ""
     @State private var isLoading = true
-    @State private var navigateToURL: IdentifiableURL? = nil
     
     // 新增功能状态
     @State private var showSetPropertiesSheet = false
@@ -257,14 +257,11 @@ struct NoteReaderView: View {
         .sheet(item: $shareItems) { share in
             ShareSheet(activityItems: share.items)
         }
-        .navigationDestination(item: $navigateToURL) { identifiableURL in
-            NoteReaderView(fileURL: identifiableURL.url, noteIndex: noteIndex)
-        }
         .environment(\.openURL, OpenURLAction { url in
             if url.scheme == "app", url.host == "note" {
                 let noteName = url.lastPathComponent
                 if let targetURL = noteIndex[noteName.lowercased()] {
-                    navigateToURL = IdentifiableURL(url: targetURL)
+                    selectedFile = FileItem(name: targetURL.deletingPathExtension().lastPathComponent, url: targetURL, isDirectory: false)
                 } else {
                     toastMessage = "note_not_found".localized(arguments: noteName)
                     showToast = true
@@ -1867,7 +1864,8 @@ extension NoteReaderView {
     NavigationStack {
         NoteReaderView(
             fileURL: URL(fileURLWithPath: "/tmp/test.md"),
-            noteIndex: [:]
+            noteIndex: [:],
+            selectedFile: .constant(nil)
         )
     }
 }

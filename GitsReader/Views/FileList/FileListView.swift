@@ -160,7 +160,8 @@ struct FileListView: View {
             .navigationDestination(for: FileItem.self) { file in
                 NoteReaderView(
                     fileURL: file.url,
-                    noteIndex: noteIndex
+                    noteIndex: noteIndex,
+                    selectedFile: $selectedFile
                 )
             }
             .navigationTitle(repoName)

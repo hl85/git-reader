@@ -48,7 +48,8 @@ struct MainContainerView: View {
                             if let file = selectedFile {
                                 NoteReaderView(
                                     fileURL: file.url,
-                                    noteIndex: noteIndex
+                                    noteIndex: noteIndex,
+                                    selectedFile: $selectedFile
                                 )
                                 .id(file.id)
                             } else {
