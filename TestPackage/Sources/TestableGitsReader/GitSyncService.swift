@@ -2,24 +2,25 @@ import Foundation
 
 /// 桩实现：提供 FileScannerService 所需的 repoRootURL
 /// 在没有 swift-libgit2 的环境中运行单元测试使用
-final class GitSyncService {
-    static let shared = GitSyncService()
+public final class GitSyncService {
+    public static let shared = GitSyncService()
 
-    var repoURL: String = ""
-    var branch: String = "main"
+    public var repoURL: String = ""
+    public var branch: String = "main"
+    public var activeRepository: RepositoryInfo?
 
-    var isConfigured: Bool {
+    public var isConfigured: Bool {
         return !repoURL.isEmpty
     }
 
-    var isLocalRepoExists: Bool {
+    public var isLocalRepoExists: Bool {
         let gitDir = repoRootURL.appendingPathComponent(".git")
         return FileManager.default.fileExists(atPath: gitDir.path)
     }
 
     /// 校验同步前置条件（与 app 端行为一致）
     /// - Throws: SyncError 当 Token / repoURL / 本地仓库缺失时
-    func validateForSync() throws {
+    public func validateForSync() throws {
         guard KeychainService.shared.readToken() != nil else {
             throw SyncError.tokenMissing
         }
@@ -33,9 +34,7 @@ final class GitSyncService {
 
     private init() {}
 
-    var repoRootURL: URL {
-        return URL(fileURLWithPath: "/tmp/gitreader-test-repo")
-    }
+    public var repoRootURL: URL = URL(fileURLWithPath: "/tmp/gitreader-test-repo")
 
     func sync() async throws {
         // 桩实现：无操作

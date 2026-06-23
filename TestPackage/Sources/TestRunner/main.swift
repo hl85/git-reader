@@ -1761,6 +1761,88 @@ print("  失败: \(failedTests) 个 ❌")
 print("  通过率: \(String(format: "%.1f", passRate))%")
 print("═══════════════════════════════════════════")
 
+// ============================================================
+// PropertyTemplateManager Tests
+// ============================================================
+await runSuite("PropertyTemplateManager - 仓库级动态模板") {
+    let testRepoDir = tempDir.appendingPathComponent("repo-template-\(UUID().uuidString)")
+    let obsidianDir = testRepoDir.appendingPathComponent(".obsidian")
+    let configURL = obsidianDir.appendingPathComponent("gitsreader.yaml")
+    
+    // 备份并清理环境
+    let savedActiveRepo = GitSyncService.shared.activeRepository
+    let savedRepoRoot = GitSyncService.shared.repoRootURL
+    
+    defer {
+        GitSyncService.shared.activeRepository = savedActiveRepo
+        GitSyncService.shared.repoRootURL = savedRepoRoot
+        try? FileManager.default.removeItem(at: testRepoDir)
+    }
+    
+    await test("无激活仓库时，回退到全局默认模板") {
+        GitSyncService.shared.activeRepository = nil
+        
+        await PropertyTemplateManager.shared.reloadTemplate()
+        let fields = await PropertyTemplateManager.shared.fields
+        try assertEqual(fields.count, 3)
+        try assertEqual(fields[0].name, "date")
+        try assertEqual(fields[1].name, "status")
+        try assertEqual(fields[2].name, "tags")
+    }
+    
+    await test("有激活仓库但无配置文件时，回退到全局默认模板") {
+        try? FileManager.default.createDirectory(at: testRepoDir, withIntermediateDirectories: true)
+        GitSyncService.shared.activeRepository = RepositoryInfo(name: "TestRepo", url: "https://github.com/test/repo.git")
+        GitSyncService.shared.repoRootURL = testRepoDir
+        
+        await PropertyTemplateManager.shared.reloadTemplate()
+        let fields = await PropertyTemplateManager.shared.fields
+        try assertEqual(fields.count, 3)
+        try assertEqual(fields[0].name, "date")
+    }
+    
+    await test("有激活仓库且有配置文件时，成功解析并应用仓库专属模板") {
+        try? FileManager.default.createDirectory(at: obsidianDir, withIntermediateDirectories: true)
+        let customYAML = """
+        - name: priority
+          type: enum
+          options: [high, medium, low]
+        - name: assignee
+          type: text
+        """
+        try! customYAML.write(to: configURL, atomically: true, encoding: .utf8)
+        
+        GitSyncService.shared.activeRepository = RepositoryInfo(name: "TestRepo", url: "https://github.com/test/repo.git")
+        GitSyncService.shared.repoRootURL = testRepoDir
+        
+        await PropertyTemplateManager.shared.reloadTemplate()
+        let fields = await PropertyTemplateManager.shared.fields
+        try assertEqual(fields.count, 2)
+        try assertEqual(fields[0].name, "priority")
+        try assertEqual(fields[0].type, .enum)
+        try assertEqual(fields[0].options, ["high", "medium", "low"])
+        try assertEqual(fields[1].name, "assignee")
+        try assertEqual(fields[1].type, .text)
+    }
+    
+    await test("有激活仓库但配置文件格式损坏时，安全回退到全局默认模板") {
+        try? FileManager.default.createDirectory(at: obsidianDir, withIntermediateDirectories: true)
+        let badYAML = """
+        - name: broken
+          type: invalid_type_here
+        """
+        try! badYAML.write(to: configURL, atomically: true, encoding: .utf8)
+        
+        GitSyncService.shared.activeRepository = RepositoryInfo(name: "TestRepo", url: "https://github.com/test/repo.git")
+        GitSyncService.shared.repoRootURL = testRepoDir
+        
+        await PropertyTemplateManager.shared.reloadTemplate()
+        let fields = await PropertyTemplateManager.shared.fields
+        try assertEqual(fields.count, 3) // 应该回退到默认的 3 个字段
+        try assertEqual(fields[0].name, "date")
+    }
+}
+
 if !failedMessages.isEmpty {
     print("\n失败详情:")
     for msg in failedMessages {

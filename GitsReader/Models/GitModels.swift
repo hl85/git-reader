@@ -43,4 +43,5 @@ struct RepositoryInfo: Codable, Identifiable, Hashable {
 
 extension Notification.Name {
     static let activeRepositoryDidChange = Notification.Name("activeRepositoryDidChange")
+    static let gitSyncDidComplete = Notification.Name("gitSyncDidComplete")
 }

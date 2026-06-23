@@ -2,34 +2,38 @@ import Foundation
 import Yams
 import Combine
 
-struct PropertyField: Codable, Identifiable, Hashable {
-    var id: String { name }
-    var name: String
-    var type: FieldType
-    var options: [String]?
+public struct PropertyField: Codable, Identifiable, Hashable {
+    public var id: String { name }
+    public var name: String
+    public var type: FieldType
+    public var options: [String]?
     
-    enum FieldType: String, Codable, CaseIterable {
+    public enum FieldType: String, Codable, CaseIterable {
         case date
         case `enum`
         case tags
         case text
     }
+    
+    public init(name: String, type: FieldType, options: [String]? = nil) {
+        self.name = name
+        self.type = type
+        self.options = options
+    }
 }
 
 @MainActor
-class PropertyTemplateManager: ObservableObject {
-    @MainActor static let shared = PropertyTemplateManager()
+public class PropertyTemplateManager: ObservableObject {
+    @MainActor public static let shared = PropertyTemplateManager()
     
-    @Published var templateYAML: String {
+    @Published public var templateYAML: String {
         didSet {
             UserDefaults.standard.set(templateYAML, forKey: "PropertyTemplateYAML")
             reloadTemplate()
         }
     }
     
-    @Published private(set) var fields: [PropertyField] = []
-    
-    private var cancellables = Set<AnyCancellable>()
+    @Published public private(set) var fields: [PropertyField] = []
     
     private init() {
         let defaultYAML = """
@@ -42,27 +46,10 @@ class PropertyTemplateManager: ObservableObject {
           type: tags
         """
         self.templateYAML = UserDefaults.standard.string(forKey: "PropertyTemplateYAML") ?? defaultYAML
-        
-        // 订阅仓库切换通知
-        NotificationCenter.default.publisher(for: .activeRepositoryDidChange)
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.reloadTemplate()
-            }
-            .store(in: &cancellables)
-            
-        // 订阅同步完成通知（配置文件可能被更新）
-        NotificationCenter.default.publisher(for: .gitSyncDidComplete)
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.reloadTemplate()
-            }
-            .store(in: &cancellables)
-            
         reloadTemplate()
     }
     
-    func reloadTemplate() {
+    public func reloadTemplate() {
         guard let activeRepo = GitSyncService.shared.activeRepository else {
             parseGlobalTemplate()
             return

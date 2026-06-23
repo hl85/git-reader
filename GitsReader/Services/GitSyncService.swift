@@ -211,6 +211,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
 
             print("[GitSyncService] clone API successful")
             await updateState(.success)
+            NotificationCenter.default.post(name: .gitSyncDidComplete, object: nil)
         } catch {
             print("[GitSyncService] clone API failed with error: \(error)")
             await updateState(.error(error as? SyncError ?? .unknown(error.localizedDescription)))
@@ -237,6 +238,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
 
             print("[GitSyncService] sync API successful")
             await updateState(.success)
+            NotificationCenter.default.post(name: .gitSyncDidComplete, object: nil)
         } catch {
             print("[GitSyncService] sync API failed with error: \(error)")
             await updateState(.error(error as? SyncError ?? .unknown(error.localizedDescription)))
@@ -277,6 +279,7 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
 
             print("[GitSyncService] commitAndSync API successful")
             await updateState(.success)
+            NotificationCenter.default.post(name: .gitSyncDidComplete, object: nil)
         } catch {
             print("[GitSyncService] commitAndSync API failed with error: \(error)")
             await updateState(.error(error as? SyncError ?? .unknown(error.localizedDescription)))
