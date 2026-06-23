@@ -1767,7 +1767,7 @@ print("════════════════════════�
 await runSuite("PropertyTemplateManager - 仓库级动态模板") {
     let testRepoDir = tempDir.appendingPathComponent("repo-template-\(UUID().uuidString)")
     let obsidianDir = testRepoDir.appendingPathComponent(".obsidian")
-    let configURL = obsidianDir.appendingPathComponent("gitsreader.yaml")
+    let configURL = obsidianDir.appendingPathComponent("gr-workflow.yaml")
     
     // 备份并清理环境
     let savedActiveRepo = GitSyncService.shared.activeRepository

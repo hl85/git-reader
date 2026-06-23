@@ -71,7 +71,7 @@ class PropertyTemplateManager: ObservableObject {
         let repoRoot = GitSyncService.shared.repoRootURL
         let configFileURL = repoRoot
             .appendingPathComponent(".obsidian")
-            .appendingPathComponent("gitsreader.yaml")
+            .appendingPathComponent("gr-workflow.yaml")
             
         guard FileManager.default.fileExists(atPath: configFileURL.path) else {
             parseGlobalTemplate()

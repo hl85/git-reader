@@ -15,7 +15,7 @@
 
 ---
 
-## 2. 配置文件规范 (`.obsidian/gitsreader.yaml`)
+## 2. 配置文件规范 (`.obsidian/gr-workflow.yaml`)
 
 配置文件采用标准 YAML 格式，声明该仓库支持的 Frontmatter 字段、类型及可选项。
 

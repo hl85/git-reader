@@ -617,7 +617,7 @@ P3 (已交付)
   ├─ iPad 阅读宽度限制 + horizontalSizeClass 差异化
   ├─ 后台静默拉取
   ├─ 暗色模式自动切换
-  └─ 仓库级状态流转及属性规范（.obsidian/gitsreader.yaml 动态模板）
+  └─ 仓库级状态流转及属性规范（.obsidian/gr-workflow.yaml 动态模板）
 ```
 
 ---
