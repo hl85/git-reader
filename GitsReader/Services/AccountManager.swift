@@ -53,24 +53,34 @@ final class AccountManager: ObservableObject, @unchecked Sendable {
         return account
     }
     
-    /// 移除账号，并清理 Keychain 中的 Token
+    /// 移除账号，彻底清理 Keychain Token、关联仓库、本地克隆数据
     @MainActor
     func removeAccount(id: UUID) {
-        accounts.removeAll { $0.id == id }
+        // 1. 删除 Keychain 中的 Token
         KeychainService.shared.deleteToken(forAccountID: id)
-        
-        // 同时将关联了该账号的仓库设为公开仓库（accountID = nil）
-        var repos = GitSyncService.shared.repositories
-        var changed = false
-        for i in 0..<repos.count {
-            if repos[i].accountID == id {
-                repos[i].accountID = nil
-                changed = true
-            }
+
+        // 2. 删除该账号关联的所有仓库的本地克隆数据
+        let reposToRemove = GitSyncService.shared.repositories.filter { $0.accountID == id }
+        let fileManager = FileManager.default
+        let documentsDir = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("repositories")
+        for repo in reposToRemove {
+            let repoDir = documentsDir.appendingPathComponent(repo.id.uuidString)
+            try? fileManager.removeItem(at: repoDir)
         }
-        if changed {
-            GitSyncService.shared.setRepositories(repos)
+
+        // 3. 从仓库列表中移除关联该账号的仓库
+        let remainingRepos = GitSyncService.shared.repositories.filter { $0.accountID != id }
+        GitSyncService.shared.setRepositories(remainingRepos)
+
+        // 4. 如果当前激活仓库被删除，切换到下一个可用仓库
+        if let activeID = GitSyncService.shared.activeRepositoryID,
+           reposToRemove.contains(where: { $0.id == activeID }) {
+            GitSyncService.shared.setActiveRepository(remainingRepos.first?.id)
         }
+
+        // 5. 从账号列表中移除（触发 didSet → saveAccounts）
+        accounts.removeAll { $0.id == id }
     }
     
     /// 获取账号的 Token

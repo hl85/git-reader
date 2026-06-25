@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gits Reader - Privacy Policy</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.7;
+            color: #333;
+            background: #fafaf8;
+            padding: 2rem 1rem;
+        }
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid #e8e5e0;
+            border-radius: 12px;
+            padding: 3rem 2.5rem;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1a1a1a;
+        }
+        .last-updated {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 2rem;
+        }
+        h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+            color: #1a1a1a;
+        }
+        p, li {
+            font-size: 0.95rem;
+            color: #444;
+            margin-bottom: 0.8rem;
+        }
+        ul { padding-left: 1.5rem; margin-bottom: 1rem; }
+        a { color: #b87333; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .section { margin-bottom: 1.5rem; }
+        .footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e8e5e0;
+            font-size: 0.85rem;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Privacy Policy</h1>
+        <p class="last-updated">Last Updated: June 26, 2026</p>
+
+        <div class="section">
+            <p>Gits Reader ("the App") is a read-only Git repository and Markdown note reader for iOS. We are committed to protecting your privacy. This policy explains what data we handle and how.</p>
+        </div>
+
+        <h2>1. Data We Store Locally on Your Device</h2>
+        <p>The App stores the following data <strong>only on your device</strong> and never transmits it to any external server operated by us:</p>
+        <ul>
+            <li><strong>Account Metadata:</strong> Your Git platform username, platform type (GitHub/GitLab), and server URL are stored in the device's local preferences (UserDefaults) to display your account list.</li>
+            <li><strong>Access Tokens:</strong> Personal Access Tokens (PAT) and OAuth tokens are stored securely in the iOS Keychain with device-only access. They are never logged, cached externally, or sent to any third party.</li>
+            <li><strong>Repository Configuration:</strong> Repository URLs, branch names, and associated account IDs are stored locally to manage your repository list.</li>
+            <li><strong>App Preferences:</strong> Theme selection, language preference, font size, shallow clone depth, and metadata templates are stored locally.</li>
+            <li><strong>Cloned Repository Data:</strong> Git repositories are cloned to your device's local sandbox (Documents directory) for offline reading.</li>
+        </ul>
+
+        <h2>2. Network Communications</h2>
+        <p>The App communicates <strong>only</strong> with the Git servers you configure (e.g., GitHub, GitLab, or your self-hosted Git server). These communications include:</p>
+        <ul>
+            <li><strong>Git Operations:</strong> Clone, fetch, and push operations using the libgit2 library, connecting directly to your configured repository URLs.</li>
+            <li><strong>Authentication:</strong> OAuth Device Flow authentication with GitHub or GitLab APIs (only when you initiate a login).</li>
+            <li><strong>Connection Tests:</strong> Lightweight HTTP requests to your repository's <code>/info/refs</code> endpoint to verify connectivity and permissions.</li>
+        </ul>
+        <p>We do <strong>not</strong> operate any intermediary servers, analytics endpoints, or tracking services. All network traffic goes directly between your device and your chosen Git provider.</p>
+
+        <h2>3. Third-Party Services</h2>
+        <p>The App does <strong>not</strong> integrate any third-party analytics, advertising, or tracking SDKs. The open-source libraries used are:</p>
+        <ul>
+            <li><strong>swift-libgit2:</strong> Local Git operations (no telemetry).</li>
+            <li><strong>swift-markdown:</strong> Markdown parsing (Apple open-source, no network).</li>
+            <li><strong>Yams:</strong> YAML parsing (no network).</li>
+            <li><strong>Nuke:</strong> Image loading and caching (loads images from your own repository).</li>
+            <li><strong>Highlightr:</strong> Code syntax highlighting (entirely local).</li>
+        </ul>
+
+        <h2>4. Data Collection</h2>
+        <p>We do <strong>not</strong> collect, transmit, or store any personal data on external servers. The App has no backend infrastructure. All your data remains on your device.</p>
+
+        <h2>5. Account Deletion</h2>
+        <p>You can remove your account from the App at any time via the Account Management screen. This will:</p>
+        <ul>
+            <li>Delete your access token from the iOS Keychain.</li>
+            <li>Remove your account metadata from local storage.</li>
+            <li>Disassociate any repositories linked to that account.</li>
+            <li>Delete local cloned repository data associated with that account.</li>
+        </ul>
+        <p>To fully revoke the App's access to your Git platform account, you should also visit your platform's application settings:</p>
+        <ul>
+            <li><strong>GitHub:</strong> <a href="https://github.com/settings/applications">github.com/settings/applications</a></li>
+            <li><strong>GitLab:</strong> Navigate to Settings &gt; Applications on your GitLab instance.</li>
+        </ul>
+
+        <h2>6. Encryption</h2>
+        <p>The App uses standard HTTPS/TLS encryption for all network communications, provided by the iOS system's Security framework. No custom or non-exempt encryption is implemented.</p>
+
+        <h2>7. Children's Privacy</h2>
+        <p>The App does not knowingly collect any data from anyone, including children under the age of 13.</p>
+
+        <h2>8. Changes to This Policy</h2>
+        <p>We may update this Privacy Policy from time to time. Any changes will be reflected on this page with an updated revision date.</p>
+
+        <div class="footer">
+            <p>Gits Reader is an independent application and is not affiliated with GitHub, GitLab, or Obsidian.</p>
+            <p>For questions or concerns, please contact us via our <a href="#">support page</a>.</p>
+        </div>
+    </div>
+</body>
+</html>

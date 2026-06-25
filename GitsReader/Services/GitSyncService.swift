@@ -301,9 +301,12 @@ final class GitSyncService: ObservableObject, @unchecked Sendable {
         ).rawValue
     }
 
-    /// SSL 证书校验回调：始终返回 0 以信任所有证书，解决模拟器/真机下的 SSL 证书失效问题
+    /// SSL 证书校验回调：默认信任系统已验证的证书；对于未通过系统验证的证书（如自签名），
+    /// 仅在用户主动开启"信任自签名证书"选项后才放行，兼顾安全与自建 GitLab 场景。
     private static let certificateCheckCallback: GitTransportCertificateCheckCB = { cert, valid, host, payload in
-        return 0
+        if valid != 0 { return 0 }
+        if UserDefaults.standard.bool(forKey: "trustSelfSignedCerts") { return 0 }
+        return -1
     }
 
     private func makeFetchOptions(token: String) -> GitFetchOptions {

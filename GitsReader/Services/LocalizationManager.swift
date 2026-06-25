@@ -1264,6 +1264,46 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
         "accounts_count": [
             "en": "Accounts",
             "zh-Hans": "个账号"
+        ],
+
+        // Account Deletion Confirmation
+        "account_empty_icon": [
+            "en": " ",
+            "zh-Hans": " "
+        ],
+        "delete_account_title": [
+            "en": "Delete Account",
+            "zh-Hans": "删除账号"
+        ],
+        "delete_account_confirm": [
+            "en": "Delete & Revoke",
+            "zh-Hans": "删除并撤销授权"
+        ],
+        "delete_account_revoke_only": [
+            "en": "Revoke Authorization Only",
+            "zh-Hans": "仅撤销授权"
+        ],
+        "delete_account_message_github": [
+            "en": "This will delete your account data and all associated repositories from this device. To fully revoke access, we will also open GitHub's application settings page.",
+            "zh-Hans": "这将删除该账号数据及所有关联仓库的本地副本。为了彻底撤销授权，我们还将打开 GitHub 的应用设置页面。"
+        ],
+        "delete_account_message_gitlab": [
+            "en": "This will delete your account data and all associated repositories from this device. To fully revoke access, we will also open GitLab's application settings page.",
+            "zh-Hans": "这将删除该账号数据及所有关联仓库的本地副本。为了彻底撤销授权，我们还将打开 GitLab 的应用设置页面。"
+        ],
+        "delete_account_message_generic": [
+            "en": "This will delete your account data and all associated repositories from this device.",
+            "zh-Hans": "这将删除该账号数据及所有关联仓库的本地副本。"
+        ],
+
+        // SSL Self-Signed Certificate Setting
+        "trust_self_signed_certs": [
+            "en": "Trust Self-Signed Certificates",
+            "zh-Hans": "信任自签名证书"
+        ],
+        "trust_self_signed_certs_desc": [
+            "en": "Enable this if your Git server uses a self-signed SSL certificate (e.g., self-hosted GitLab). When disabled, only system-trusted certificates are accepted.",
+            "zh-Hans": "如果您的 Git 服务器使用自签名 SSL 证书（如自建 GitLab），请开启此项。关闭时仅接受系统信任的证书。"
         ]
     ]
 }

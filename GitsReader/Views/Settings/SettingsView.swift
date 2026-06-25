@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var localizationManager = LocalizationManager.shared
     @AppStorage("appTheme") private var appTheme: String = AppTheme.system.rawValue
+    @AppStorage("trustSelfSignedCerts") private var trustSelfSignedCerts: Bool = false
 
     @State private var showDisconnectAlert = false
     @State private var showToast = false
@@ -202,13 +203,13 @@ struct SettingsView: View {
                         .font(.system(size: 16))
                         .foregroundStyle(ClaudeColors.textSecondary)
                         .frame(width: 22)
-                    
+
                     Text("language".localized)
                         .font(ClaudeTypography.bodyFont)
                         .foregroundStyle(ClaudeColors.text)
-                    
+
                     Spacer()
-                    
+
                     Picker("", selection: $localizationManager.currentLanguage) {
                         ForEach(AppLanguage.allCases) { lang in
                             Text(lang.displayName).tag(lang)
@@ -220,6 +221,32 @@ struct SettingsView: View {
                 .padding(.vertical, 4)
             } header: {
                 sectionHeader("language".localized)
+            }
+
+            // SSL 证书设置
+            Section {
+                Toggle(isOn: $trustSelfSignedCerts) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "lock.shield")
+                            .font(.system(size: 16))
+                            .foregroundStyle(ClaudeColors.textSecondary)
+                            .frame(width: 22)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("trust_self_signed_certs".localized)
+                                .font(ClaudeTypography.bodyFont)
+                                .foregroundStyle(ClaudeColors.text)
+                            Text("trust_self_signed_certs_desc".localized)
+                                .font(.caption)
+                                .foregroundStyle(ClaudeColors.textMuted)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .tint(ClaudeColors.accent)
+            } header: {
+                sectionHeader("SSL")
             }
 
             // 关于

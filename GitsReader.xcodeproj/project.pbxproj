@@ -37,6 +37,7 @@
 		A414C5BD965FD11BEE61AA55 /* MarkdownBlockClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1647BF9AFD0A78D984DBACCA /* MarkdownBlockClassifier.swift */; };
 		A86BCED6E6DCAD4A643A5DCA /* AccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A96A2BC740D1E39C9CDE4A9 /* AccountManager.swift */; };
 		A9BFDBE59D48AC7268E1613E /* GitModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCCA56BAD52070450A6C0470 /* GitModels.swift */; };
+		B2EEA4F7F498831615994B73 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = CDB88FBA8EC56DADEE6E5AD0 /* PrivacyInfo.xcprivacy */; };
 		BB8AF6B10E2FE5D039AC2957 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D31251AB53ECFFAA238B898 /* KeychainService.swift */; };
 		C979CEF41E205019C3D3EB38 /* FileListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12846DD4999F5983A86C0FB1 /* FileListView.swift */; };
 		C9F50598FA0FA612214735DB /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 67D49FA6748F99E9A83B15A4 /* Markdown */; };
@@ -84,6 +85,7 @@
 		C1A8FA52CDEE414A2135320D /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		CA8351DB67A00C9C57CEFF05 /* Version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Version.xcconfig; sourceTree = "<group>"; };
 		CC957313E608C7F09F606658 /* GitLabDeviceFlowService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitLabDeviceFlowService.swift; sourceTree = "<group>"; };
+		CDB88FBA8EC56DADEE6E5AD0 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		D0103B09B2E5FDBCEC6469E6 /* FileScannerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileScannerService.swift; sourceTree = "<group>"; };
 		D78DAD3FC44F5B827D2A0B1B /* GitsReader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GitsReader.entitlements; sourceTree = "<group>"; };
 		D81FF432509831AAD332888C /* PropertyTemplateSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyTemplateSettingsView.swift; sourceTree = "<group>"; };
@@ -281,6 +283,7 @@
 			isa = PBXGroup;
 			children = (
 				8503859AA20DDCC7C1B5CD98 /* Assets.xcassets */,
+				CDB88FBA8EC56DADEE6E5AD0 /* PrivacyInfo.xcprivacy */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -360,6 +363,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9DE668845130BCDD4804F8F5 /* Assets.xcassets in Resources */,
+				B2EEA4F7F498831615994B73 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -442,7 +446,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GitsReader/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Gits Reader";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -465,7 +469,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GitsReader/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Gits Reader";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
