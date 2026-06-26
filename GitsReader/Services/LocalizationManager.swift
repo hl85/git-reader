@@ -12,6 +12,20 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     
     var id: String { self.rawValue }
     
+    /// 用于 `Locale` 初始化的完整区域标识符，便于按语言归类格式化日期/数字等。
+    var localeIdentifier: String {
+        switch self {
+        case .english: return "en_US"
+        case .simplifiedChinese: return "zh_CN"
+        case .traditionalChinese: return "zh_TW"
+        case .japanese: return "ja_JP"
+        case .german: return "de_DE"
+        case .french: return "fr_FR"
+        case .korean: return "ko_KR"
+        }
+    }
+    
+    /// 语言选择器中显示的名称，使用该语言自身的书写方式。
     var displayName: String {
         switch self {
         case .english: return "English"
@@ -109,52 +123,92 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
         "welcome_to_gits_reader": [
             "en": "Welcome to Gits Reader",
             "zh-Hans": "欢迎使用 Gits Reader",
-            "zh-Hant": "歡迎使用 Gits Reader"
+            "zh-Hant": "歡迎使用 Gits Reader",
+            "ja": "Gits Reader へようこそ",
+            "de": "Willkommen bei Gits Reader",
+            "fr": "Bienvenue dans Gits Reader",
+            "ko": "Gits Reader에 오신 것을 환영합니다"
         ],
         "add_first_repo": [
             "en": "Add Your First Repository",
             "zh-Hans": "添加您的第一个仓库",
-            "zh-Hant": "添加您的第一個倉庫"
+            "zh-Hant": "添加您的第一個倉庫",
+            "ja": "最初のリポジトリを追加",
+            "de": "Fügen Sie Ihr erstes Repository hinzu",
+            "fr": "Ajoutez votre premier dépôt",
+            "ko": "첫 번째 리포지토리 추가"
         ],
         "welcome_feature_multi_repo": [
             "en": "Multi-Repository Support",
             "zh-Hans": "多仓库支持",
-            "zh-Hant": "多倉庫支援"
+            "zh-Hant": "多倉庫支援",
+            "ja": "複数リポジトリ対応",
+            "de": "Unterstützung mehrerer Repositorys",
+            "fr": "Prise en charge de plusieurs dépôts",
+            "ko": "다중 리포지토리 지원"
         ],
         "welcome_feature_multi_repo_desc": [
             "en": "Seamlessly switch between multiple Git repositories with independent configurations.",
             "zh-Hans": "无缝切换多个 Git 仓库，支持独立配置。",
-            "zh-Hant": "無縫切換多個 Git 倉庫，支援獨立配置。"
+            "zh-Hant": "無縫切換多個 Git 倉庫，支援獨立配置。",
+            "ja": "独立した設定で複数の Git リポジトリをシームレスに切り替えます。",
+            "de": "Wechseln Sie nahtlos zwischen mehreren Git-Repositorys mit unabhängigen Konfigurationen.",
+            "fr": "Basculez facilement entre plusieurs dépôts Git avec des configurations indépendantes.",
+            "ko": "독립적인 구성으로 여러 Git 리포지토리를 원활하게 전환하세요."
         ],
         "welcome_feature_oauth": [
             "en": "OAuth Device Login",
             "zh-Hans": "OAuth 快速登录",
-            "zh-Hant": "OAuth 快速登入"
+            "zh-Hant": "OAuth 快速登入",
+            "ja": "OAuth デバイスログイン",
+            "de": "OAuth-Geräteanmeldung",
+            "fr": "Connexion OAuth par appareil",
+            "ko": "OAuth 기기 로그인"
         ],
         "welcome_feature_oauth_desc": [
             "en": "Log in to GitHub or GitLab securely using device flow without copying tokens.",
             "zh-Hans": "支持 GitHub 和 GitLab 设备流登录，无需手动复制 Token。",
-            "zh-Hant": "支援 GitHub 和 GitLab 裝置流登入，無需手動複製 Token。"
+            "zh-Hant": "支援 GitHub 和 GitLab 裝置流登入，無需手動複製 Token。",
+            "ja": "トークンをコピーせずに、デバイスフローで安全に GitHub または GitLab にログインできます。",
+            "de": "Melden Sie sich sicher bei GitHub oder GitLab über den Gerätefluss an, ohne Token kopieren zu müssen.",
+            "fr": "Connectez-vous en toute sécurité à GitHub ou GitLab par flux d'appareil, sans copier de jeton.",
+            "ko": "토큰을 복사하지 않고 기기 흐름을 통해 GitHub 또는 GitLab에 안전하게 로그인하세요."
         ],
         "welcome_feature_offline": [
             "en": "Offline Reading",
             "zh-Hans": "离线阅读",
-            "zh-Hant": "離線閱讀"
+            "zh-Hant": "離線閱讀",
+            "ja": "オフライン閲覧",
+            "de": "Offline-Lesen",
+            "fr": "Lecture hors ligne",
+            "ko": "오프라인 읽기"
         ],
         "welcome_feature_offline_desc": [
             "en": "Clone repositories locally to read your Obsidian notes anytime, anywhere.",
             "zh-Hans": "本地克隆，随时随地阅读您的 Obsidian 笔记。",
-            "zh-Hant": "本地複製，隨時隨地閱讀您的 Obsidian 筆記。"
+            "zh-Hant": "本地複製，隨時隨地閱讀您的 Obsidian 筆記。",
+            "ja": "リポジトリをローカルにクローンし、いつでもどこでも Obsidian ノートを読みます。",
+            "de": "Klonen Sie Repositorys lokal, um Ihre Obsidian-Notizen jederzeit und überall zu lesen.",
+            "fr": "Clonez les dépôts localement pour lire vos notes Obsidian n'importe quand et n'importe où.",
+            "ko": "리포지토리를 로컬에 클론하여 언제 어디서나 Obsidian 노트를 읽으세요."
         ],
         "welcome_feature_secure": [
             "en": "Secure Storage",
             "zh-Hans": "安全存储",
-            "zh-Hant": "安全存儲"
+            "zh-Hant": "安全存儲",
+            "ja": "安全な保存",
+            "de": "Sichere Speicherung",
+            "fr": "Stockage sécurisé",
+            "ko": "안전한 저장"
         ],
         "welcome_feature_secure_desc": [
             "en": "Your access tokens are securely stored in the system Keychain and never uploaded.",
             "zh-Hans": "您的 Token 安全存储于系统 Keychain 中，绝不上传。",
-            "zh-Hant": "您的 Token 安全儲存於系統 Keychain 中，絕不上傳。"
+            "zh-Hant": "您的 Token 安全儲存於系統 Keychain 中，絕不上傳。",
+            "ja": "アクセストークンはシステムの Keychain に安全に保存され、決してアップロードされません。",
+            "de": "Ihre Zugriffstoken werden sicher im System-Keychain gespeichert und niemals hochgeladen.",
+            "fr": "Vos jetons d'accès sont stockés en toute sécurité dans le Keychain système et ne sont jamais téléchargés.",
+            "ko": "액세스 토큰은 시스템 Keychain에 안전하게 저장되며 절대 업로드되지 않습니다."
         ],
         
         // Repo Config Form
@@ -1115,155 +1169,345 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
         ],
         "delete_repo": [
             "en": "Delete Repository",
-            "zh-Hans": "删除仓库"
+            "zh-Hans": "删除仓库",
+            "zh-Hant": "刪除倉庫",
+            "ja": "リポジトリを削除",
+            "de": "Repository löschen",
+            "fr": "Supprimer le dépôt",
+            "ko": "리포지토리 삭제"
         ],
         "auth_account": [
             "en": "Authentication Account",
-            "zh-Hans": "认证账号"
+            "zh-Hans": "认证账号",
+            "zh-Hant": "認證帳號",
+            "ja": "認証アカウント",
+            "de": "Authentifizierungskonto",
+            "fr": "Compte d'authentification",
+            "ko": "인증 계정"
         ],
         "select_account": [
             "en": "Select Account",
-            "zh-Hans": "选择账号"
+            "zh-Hans": "选择账号",
+            "zh-Hant": "選擇帳號",
+            "ja": "アカウントを選択",
+            "de": "Konto auswählen",
+            "fr": "Sélectionner le compte",
+            "ko": "계정 선택"
         ],
         "public_repo_no_auth": [
             "en": "Public Repository (No Auth)",
-            "zh-Hans": "公开仓库 (无需认证)"
+            "zh-Hans": "公开仓库 (无需认证)",
+            "zh-Hant": "公開倉庫 (無需認證)",
+            "ja": "公開リポジトリ（認証不要）",
+            "de": "Öffentliches Repository (keine Authentifizierung)",
+            "fr": "Dépôt public (sans authentification)",
+            "ko": "공개 리포지토리(인증 불필요)"
         ],
         "add_new_account": [
             "en": "Add New Account",
-            "zh-Hans": "添加新账号"
+            "zh-Hans": "添加新账号",
+            "zh-Hant": "添加新帳號",
+            "ja": "新しいアカウントを追加",
+            "de": "Neues Konto hinzufügen",
+            "fr": "Ajouter un nouveau compte",
+            "ko": "새 계정 추가"
         ],
         "login_new_account": [
             "en": "Login New Account",
-            "zh-Hans": "登录新账号"
+            "zh-Hans": "登录新账号",
+            "zh-Hant": "登錄新帳號",
+            "ja": "新しいアカウントでログイン",
+            "de": "Neues Konto anmelden",
+            "fr": "Connecter un nouveau compte",
+            "ko": "새 계정으로 로그인"
         ],
         "platform": [
             "en": "Platform",
-            "zh-Hans": "平台"
+            "zh-Hans": "平台",
+            "zh-Hant": "平台",
+            "ja": "プラットフォーム",
+            "de": "Plattform",
+            "fr": "Plateforme",
+            "ko": "플랫폼"
         ],
         "custom_client_id_optional": [
             "en": "Custom Client ID (Optional)",
-            "zh-Hans": "自定义 Client ID (可选)"
+            "zh-Hans": "自定义 Client ID (可选)",
+            "zh-Hant": "自定義 Client ID (可選)",
+            "ja": "カスタム Client ID（オプション）",
+            "de": "Benutzerdefinierte Client-ID (optional)",
+            "fr": "Client ID personnalisé (optionnel)",
+            "ko": "사용자 지정 Client ID(선택)"
         ],
         "device_flow_code_prompt": [
             "en": "Please enter the following code on the authorization page:",
-            "zh-Hans": "请在授权页面中输入以下验证码："
+            "zh-Hans": "请在授权页面中输入以下验证码：",
+            "zh-Hant": "請在授權頁面中輸入以下驗證碼：",
+            "ja": "認証ページに次のコードを入力してください：",
+            "de": "Bitte geben Sie den folgenden Code auf der Autorisierungsseite ein:",
+            "fr": "Veuillez saisir le code suivant sur la page d'autorisation :",
+            "ko": "인증 페이지에 다음 코드를 입력하십시오:"
         ],
         "copy_and_open_browser": [
             "en": "Copy & Open Browser",
-            "zh-Hans": "复制并打开浏览器"
+            "zh-Hans": "复制并打开浏览器",
+            "zh-Hant": "複製並打開瀏覽器",
+            "ja": "コピーしてブラウザを開く",
+            "de": "Kopieren und Browser öffnen",
+            "fr": "Copier et ouvrir le navigateur",
+            "ko": "복사 및 브라우저 열기"
         ],
         "waiting_for_auth": [
             "en": "Waiting for authorization...",
-            "zh-Hans": "正在等待授权..."
+            "zh-Hans": "正在等待授权...",
+            "zh-Hant": "正在等待授權...",
+            "ja": "認証を待っています...",
+            "de": "Warte auf Autorisierung...",
+            "fr": "En attente d'autorisation...",
+            "ko": "인증 대기 중..."
         ],
         "start_login": [
             "en": "Start Login",
-            "zh-Hans": "开始登录"
+            "zh-Hans": "开始登录",
+            "zh-Hant": "開始登錄",
+            "ja": "ログインを開始",
+            "de": "Anmeldung starten",
+            "fr": "Commencer la connexion",
+            "ko": "로그인 시작"
         ],
         "add_repo_title": [
             "en": "Add Repository",
-            "zh-Hans": "添加仓库"
+            "zh-Hans": "添加仓库",
+            "zh-Hant": "添加倉庫",
+            "ja": "リポジトリを追加",
+            "de": "Repository hinzufügen",
+            "fr": "Ajouter un dépôt",
+            "ko": "리포지토리 추가"
         ],
         "clone": [
             "en": "Clone",
-            "zh-Hans": "克隆"
+            "zh-Hans": "克隆",
+            "zh-Hant": "克隆",
+            "ja": "クローン",
+            "de": "Klonen",
+            "fr": "Cloner",
+            "ko": "클론"
         ],
         "no_accounts_logged_in": [
             "en": "No Accounts Logged In",
-            "zh-Hans": "未登录任何账号"
+            "zh-Hans": "未登录任何账号",
+            "zh-Hant": "未登錄任何帳號",
+            "ja": "ログインしているアカウントがありません",
+            "de": "Keine Konten angemeldet",
+            "fr": "Aucun compte connecté",
+            "ko": "로그인된 계정 없음"
         ],
         "no_accounts_logged_in_desc": [
             "en": "Log in to GitHub or GitLab to access your private repositories.",
-            "zh-Hans": "登录 GitHub 或 GitLab 账号以访问您的私有仓库。"
+            "zh-Hans": "登录 GitHub 或 GitLab 账号以访问您的私有仓库。",
+            "zh-Hant": "登錄 GitHub 或 GitLab 帳號以訪問您的私有倉庫。",
+            "ja": "プライベートリポジトリにアクセスするには、GitHub または GitLab アカウントにログインしてください。",
+            "de": "Melden Sie sich bei GitHub oder GitLab an, um auf Ihre privaten Repositorys zuzugreifen.",
+            "fr": "Connectez-vous à GitHub ou GitLab pour accéder à vos dépôts privés.",
+            "ko": "비공개 리포지토리에 접근하려면 GitHub 또는 GitLab 계정으로 로그인하십시오."
         ],
         "logged_in_accounts": [
             "en": "Logged In Accounts",
-            "zh-Hans": "已登录账号"
+            "zh-Hans": "已登录账号",
+            "zh-Hant": "已登錄帳號",
+            "ja": "ログイン中のアカウント",
+            "de": "Angemeldete Konten",
+            "fr": "Comptes connectés",
+            "ko": "로그인된 계정"
         ],
         "logout": [
             "en": "Log Out",
-            "zh-Hans": "退出登录"
+            "zh-Hans": "退出登录",
+            "zh-Hant": "退出登錄",
+            "ja": "ログアウト",
+            "de": "Abmelden",
+            "fr": "Déconnexion",
+            "ko": "로그아웃"
         ],
         "account_management_title": [
             "en": "Account Management",
-            "zh-Hans": "账号管理"
+            "zh-Hans": "账号管理",
+            "zh-Hant": "帳號管理",
+            "ja": "アカウント管理",
+            "de": "Kontoverwaltung",
+            "fr": "Gestion des comptes",
+            "ko": "계정 관리"
         ],
         "done": [
             "en": "Done",
-            "zh-Hans": "完成"
+            "zh-Hans": "完成",
+            "zh-Hant": "完成",
+            "ja": "完了",
+            "de": "Fertig",
+            "fr": "Terminé",
+            "ko": "완료"
         ],
         "select_note_to_read": [
             "en": "Select a Note to Read",
-            "zh-Hans": "选择一篇笔记开始阅读"
+            "zh-Hans": "选择一篇笔记开始阅读",
+            "zh-Hant": "選擇一篇筆記開始閱讀",
+            "ja": "読むノートを選択",
+            "de": "Wählen Sie eine Notiz zum Lesen aus",
+            "fr": "Sélectionnez une note à lire",
+            "ko": "읽을 노트 선택"
         ],
         "select_note_to_read_desc": [
             "en": "Choose a note from the file list on the left to display its content here.",
-            "zh-Hans": "从左侧文件列表中选择一篇笔记，其内容将在此处展示。"
+            "zh-Hans": "从左侧文件列表中选择一篇笔记，其内容将在此处展示。",
+            "zh-Hant": "從左側文件列表中選擇一篇筆記，其內容將在此處展示。",
+            "ja": "左側のファイル一覧からノートを選択すると、内容がここに表示されます。",
+            "de": "Wählen Sie eine Notiz aus der Dateiliste links aus, der Inhalt wird hier angezeigt.",
+            "fr": "Choisissez une note dans la liste des fichiers à gauche, son contenu s'affichera ici.",
+            "ko": "왼쪽 파일 목록에서 노트를 선택하면 내용이 여기에 표시됩니다."
         ],
         "device_flow_expired": [
             "en": "Authorization code expired. Please try again.",
-            "zh-Hans": "授权码已过期，请重试。"
+            "zh-Hans": "授权码已过期，请重试。",
+            "zh-Hant": "授權碼已過期，請重試。",
+            "ja": "認証コードの有効期限が切れました。もう一度お試しください。",
+            "de": "Autorisierungscode abgelaufen. Bitte versuchen Sie es erneut.",
+            "fr": "Le code d'autorisation a expiré. Veuillez réessayer.",
+            "ko": "인증 코드가 만료되었습니다. 다시 시도하십시오."
         ],
         "device_flow_access_denied": [
             "en": "Access denied by user.",
-            "zh-Hans": "用户拒绝了授权。"
+            "zh-Hans": "用户拒绝了授权。",
+            "zh-Hant": "用戶拒絕了授權。",
+            "ja": "ユーザーが認証を拒否しました。",
+            "de": "Autorisierung durch Benutzer abgelehnt.",
+            "fr": "L'utilisateur a refusé l'autorisation.",
+            "ko": "사용자가 인증을 거부했습니다."
         ],
         "device_flow_invalid_response": [
             "en": "Invalid response from server.",
-            "zh-Hans": "服务器返回了无效响应。"
+            "zh-Hans": "服务器返回了无效响应。",
+            "zh-Hant": "伺服器返回了無效響應。",
+            "ja": "サーバーからの応答が無効です。",
+            "de": "Ungültige Antwort vom Server.",
+            "fr": "Réponse du serveur invalide.",
+            "ko": "서버로부터 유효하지 않은 응답을 받았습니다."
         ],
         "select_repo": [
             "en": "Select Repository",
-            "zh-Hans": "选择仓库"
+            "zh-Hans": "选择仓库",
+            "zh-Hant": "選擇倉庫",
+            "ja": "リポジトリを選択",
+            "de": "Repository auswählen",
+            "fr": "Sélectionner le dépôt",
+            "ko": "리포지토리 선택"
         ],
         "select_branch": [
             "en": "Select Branch",
-            "zh-Hans": "选择分支"
+            "zh-Hans": "选择分支",
+            "zh-Hant": "選擇分支",
+            "ja": "ブランチを選択",
+            "de": "Branch auswählen",
+            "fr": "Sélectionner la branche",
+            "ko": "브랜치 선택"
         ],
         "loading_repos": [
             "en": "Loading repositories...",
-            "zh-Hans": "正在加载仓库列表..."
+            "zh-Hans": "正在加载仓库列表...",
+            "zh-Hant": "正在加載倉庫列表...",
+            "ja": "リポジトリ一覧を読み込んでいます...",
+            "de": "Repositorys werden geladen...",
+            "fr": "Chargement des dépôts...",
+            "ko": "리포지토리 목록 로드 중..."
         ],
         "loading_branches": [
             "en": "Loading branches...",
-            "zh-Hans": "正在加载分支列表..."
+            "zh-Hans": "正在加载分支列表...",
+            "zh-Hant": "正在加載分支列表...",
+            "ja": "ブランチ一覧を読み込んでいます...",
+            "de": "Branches werden geladen...",
+            "fr": "Chargement des branches...",
+            "ko": "브랜치 목록 로드 중..."
         ],
         "device_flow_login": [
             "en": "Device Code",
-            "zh-Hans": "验证码登录"
+            "zh-Hans": "验证码登录",
+            "zh-Hant": "驗證碼登錄",
+            "ja": "デバイスコードログイン",
+            "de": "Gerätecode-Anmeldung",
+            "fr": "Connexion par code appareil",
+            "ko": "기기 코드 로그인"
         ],
         "token_login": [
             "en": "Access Token",
-            "zh-Hans": "Token 登录"
+            "zh-Hans": "Token 登录",
+            "zh-Hant": "Token 登錄",
+            "ja": "アクセストークンでログイン",
+            "de": "Token-Anmeldung",
+            "fr": "Connexion par jeton",
+            "ko": "토큰 로그인"
         ],
         "verify_and_login": [
             "en": "Verify & Login",
-            "zh-Hans": "验证并登录"
+            "zh-Hans": "验证并登录",
+            "zh-Hant": "驗證並登錄",
+            "ja": "検証してログイン",
+            "de": "Überprüfen und anmelden",
+            "fr": "Vérifier et connecter",
+            "ko": "검증 및 로그인"
         ],
         "verifying": [
             "en": "Verifying...",
-            "zh-Hans": "正在验证..."
+            "zh-Hans": "正在验证...",
+            "zh-Hant": "正在驗證...",
+            "ja": "検証中...",
+            "de": "Überprüfung läuft...",
+            "fr": "Vérification...",
+            "ko": "검증 중..."
         ],
         "enter_token_placeholder": [
             "en": "Enter Personal Access Token...",
-            "zh-Hans": "请输入个人访问令牌 (Token)..."
+            "zh-Hans": "请输入个人访问令牌 (Token)...",
+            "zh-Hant": "請輸入個人訪問令牌 (Token)...",
+            "ja": "パーソナルアクセストークンを入力...",
+            "de": "Persönlichen Zugriffstoken eingeben...",
+            "fr": "Saisir le jeton d'accès personnel...",
+            "ko": "개인 액세스 토큰을 입력하십시오..."
         ],
         "all_repos": [
             "en": "All Repositories",
-            "zh-Hans": "全部仓库"
+            "zh-Hans": "全部仓库",
+            "zh-Hant": "全部倉庫",
+            "ja": "すべてのリポジトリ",
+            "de": "Alle Repositorys",
+            "fr": "Tous les dépôts",
+            "ko": "전체 리포지토리"
         ],
         "management": [
             "en": "Management",
-            "zh-Hans": "管理"
+            "zh-Hans": "管理",
+            "zh-Hant": "管理",
+            "ja": "管理",
+            "de": "Verwaltung",
+            "fr": "Gestion",
+            "ko": "관리"
         ],
         "switch": [
             "en": "Switch",
-            "zh-Hans": "切换"
+            "zh-Hans": "切换",
+            "zh-Hant": "切換",
+            "ja": "切り替え",
+            "de": "Wechseln",
+            "fr": "Changer",
+            "ko": "전환"
         ],
         "accounts_count": [
             "en": "Accounts",
-            "zh-Hans": "个账号"
+            "zh-Hans": "个账号",
+            "zh-Hant": "個帳號",
+            "ja": "件のアカウント",
+            "de": "Konten",
+            "fr": "comptes",
+            "ko": "개 계정"
         ],
 
         // Account Deletion Confirmation
@@ -1273,37 +1517,77 @@ final class LocalizationManager: ObservableObject, @unchecked Sendable {
         ],
         "delete_account_title": [
             "en": "Delete Account",
-            "zh-Hans": "删除账号"
+            "zh-Hans": "删除账号",
+            "zh-Hant": "刪除帳號",
+            "ja": "アカウントを削除",
+            "de": "Konto löschen",
+            "fr": "Supprimer le compte",
+            "ko": "계정 삭제"
         ],
         "delete_account_confirm": [
             "en": "Delete & Revoke",
-            "zh-Hans": "删除并撤销授权"
+            "zh-Hans": "删除并撤销授权",
+            "zh-Hant": "刪除並撤銷授權",
+            "ja": "削除して認証を取り消す",
+            "de": "Löschen und Autorisierung widerrufen",
+            "fr": "Supprimer et révoquer l'autorisation",
+            "ko": "삭제 및 권한 취소"
         ],
         "delete_account_revoke_only": [
             "en": "Revoke Authorization Only",
-            "zh-Hans": "仅撤销授权"
+            "zh-Hans": "仅撤销授权",
+            "zh-Hant": "僅撤銷授權",
+            "ja": "認証のみ取り消す",
+            "de": "Nur Autorisierung widerrufen",
+            "fr": "Révoquer l'autorisation uniquement",
+            "ko": "권한 취소만"
         ],
         "delete_account_message_github": [
             "en": "This will delete your account data and all associated repositories from this device. To fully revoke access, we will also open GitHub's application settings page.",
-            "zh-Hans": "这将删除该账号数据及所有关联仓库的本地副本。为了彻底撤销授权，我们还将打开 GitHub 的应用设置页面。"
+            "zh-Hans": "这将删除该账号数据及所有关联仓库的本地副本。为了彻底撤销授权，我们还将打开 GitHub 的应用设置页面。",
+            "zh-Hant": "這將刪除該帳號資料及所有關聯倉庫的本地副本。為了徹底撤銷授權，我們還將打開 GitHub 的應用設置頁面。",
+            "ja": "これにより、このデバイスからアカウントデータと関連するすべてのリポジトリが削除されます。認証を完全に取り消すため、GitHub のアプリケーション設定ページも開きます。",
+            "de": "Dadurch werden die Kontodaten und alle zugehörigen Repositorys von diesem Gerät gelöscht. Um die Autorisierung vollständig zu widerrufen, öffnen wir auch die Anwendungseinstellungen von GitHub.",
+            "fr": "Cela supprimera les données du compte et tous les dépôts associés de cet appareil. Pour révoquer complètement l'accès, nous ouvrirons également la page des paramètres d'application de GitHub.",
+            "ko": "이렇게 하면 이 기기에서 계정 데이터와 관련된 모든 리포지토리가 삭제됩니다. 권한을 완전히 취소하려면 GitHub 애플리케이션 설정 페이지도 열겠습니다."
         ],
         "delete_account_message_gitlab": [
             "en": "This will delete your account data and all associated repositories from this device. To fully revoke access, we will also open GitLab's application settings page.",
-            "zh-Hans": "这将删除该账号数据及所有关联仓库的本地副本。为了彻底撤销授权，我们还将打开 GitLab 的应用设置页面。"
+            "zh-Hans": "这将删除该账号数据及所有关联仓库的本地副本。为了彻底撤销授权，我们还将打开 GitLab 的应用设置页面。",
+            "zh-Hant": "這將刪除該帳號資料及所有關聯倉庫的本地副本。為了徹底撤銷授權，我們還將打開 GitLab 的應用設置頁面。",
+            "ja": "これにより、このデバイスからアカウントデータと関連するすべてのリポジトリが削除されます。認証を完全に取り消すため、GitLab のアプリケーション設定ページも開きます。",
+            "de": "Dadurch werden die Kontodaten und alle zugehörigen Repositorys von diesem Gerät gelöscht. Um die Autorisierung vollständig zu widerrufen, öffnen wir auch die Anwendungseinstellungen von GitLab.",
+            "fr": "Cela supprimera les données du compte et tous les dépôts associés de cet appareil. Pour révoquer complètement l'accès, nous ouvrirons également la page des paramètres d'application de GitLab.",
+            "ko": "이렇게 하면 이 기기에서 계정 데이터와 관련된 모든 리포지토리가 삭제됩니다. 권한을 완전히 취소하려면 GitLab 애플리케이션 설정 페이지도 열겠습니다."
         ],
         "delete_account_message_generic": [
             "en": "This will delete your account data and all associated repositories from this device.",
-            "zh-Hans": "这将删除该账号数据及所有关联仓库的本地副本。"
+            "zh-Hans": "这将删除该账号数据及所有关联仓库的本地副本。",
+            "zh-Hant": "這將刪除該帳號資料及所有關聯倉庫的本地副本。",
+            "ja": "これにより、このデバイスからアカウントデータと関連するすべてのリポジトリが削除されます。",
+            "de": "Dadurch werden die Kontodaten und alle zugehörigen Repositorys von diesem Gerät gelöscht.",
+            "fr": "Cela supprimera les données du compte et tous les dépôts associés de cet appareil.",
+            "ko": "이렇게 하면 이 기기에서 계정 데이터와 관련된 모든 리포지토리가 삭제됩니다."
         ],
 
         // SSL Self-Signed Certificate Setting
         "trust_self_signed_certs": [
             "en": "Trust Self-Signed Certificates",
-            "zh-Hans": "信任自签名证书"
+            "zh-Hans": "信任自签名证书",
+            "zh-Hant": "信任自簽名證書",
+            "ja": "自己署名証明書を信頼する",
+            "de": "Selbstsignierte Zertifikate vertrauen",
+            "fr": "Faire confiance aux certificats auto-signés",
+            "ko": "자체 서명 인증서 신뢰"
         ],
         "trust_self_signed_certs_desc": [
             "en": "Enable this if your Git server uses a self-signed SSL certificate (e.g., self-hosted GitLab). When disabled, only system-trusted certificates are accepted.",
-            "zh-Hans": "如果您的 Git 服务器使用自签名 SSL 证书（如自建 GitLab），请开启此项。关闭时仅接受系统信任的证书。"
+            "zh-Hans": "如果您的 Git 服务器使用自签名 SSL 证书（如自建 GitLab），请开启此项。关闭时仅接受系统信任的证书。",
+            "zh-Hant": "如果您的 Git 伺服器使用自簽名 SSL 證書（如自建 GitLab），請開啟此項。關閉時僅接受系統信任的證書。",
+            "ja": "自己ホスト型 GitLab など、Git サーバーが自己署名 SSL 証明書を使用している場合は、このオプションを有効にしてください。無効時はシステムが信頼する証明書のみを受け入れます。",
+            "de": "Aktivieren Sie diese Option, wenn Ihr Git-Server ein selbstsigniertes SSL-Zertifikat verwendet (z. B. selbst gehostetes GitLab). Wenn deaktiviert, werden nur vom System vertraute Zertifikate akzeptiert.",
+            "fr": "Activez cette option si votre serveur Git utilise un certificat SSL auto-signé (par exemple GitLab auto-hébergé). Lorsqu'elle est désactivée, seuls les certificats approuvés par le système sont acceptés.",
+            "ko": "자체 호스팅 GitLab 등 Git 서버가 자체 서명 SSL 인증서를 사용하는 경우 이 옵션을 활성화하십시오. 비활성화 시 시스템이 신뢰하는 인증서만 수락합니다."
         ]
     ]
 }

@@ -1565,6 +1565,7 @@ struct SetPropertiesSheet: View {
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: LocalizationManager.shared.currentLanguage.localeIdentifier)
         return formatter
     }
     
